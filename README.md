@@ -1,0 +1,2 @@
+# SpeechGeneration
+PynkTrombone声道モデルと深層モデルを用いた音声生成
