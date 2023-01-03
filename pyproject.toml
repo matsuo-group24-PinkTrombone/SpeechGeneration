@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "speechgeneration"
+version = "0.0.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+    {include = "src"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+pytest-skip-slow = "^0.0.3"
+pre-commit = "^2.21.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest.ini_options]
+addopts = [
+    "--color=yes",
+    "--durations=0",
+    "--strict-markers",
+    "--doctest-modules",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
+log_cli = "True"
+markers = [
+    "slow: slow tests",
+]
+minversion = "6.0"
+testpaths = "tests/"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: nocover",
+    "raise NotImplementedError",
+    "raise NotImplementedError()",
+    "if __name__ == .__main__.:",
+]
