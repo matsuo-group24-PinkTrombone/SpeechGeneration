@@ -16,6 +16,7 @@ format: ## Run pre-commit hooks
 
 sync: ## Merge changes from main branch to your current branch
 	git pull
+	git pull origin main
 
 test: ## Run not slow tests
 	poetry run pytest -v
