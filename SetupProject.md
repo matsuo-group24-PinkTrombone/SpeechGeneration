@@ -18,6 +18,8 @@ Not implemented yet...
   && sudo systemctl --now enable docker
   ```
 
+  Note: wsl環境でDockerデーモンを起動するためには`sudo service docker start`を実行してください。
+
   また、GPUを使うために NVIDIA Container Toolkitをインストールします。[インストール方法はNVIDIAのドキュメントを参照願います。](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit)
 
 ## Preparation for Experiment.
