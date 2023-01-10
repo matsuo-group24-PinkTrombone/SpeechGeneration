@@ -26,3 +26,14 @@ test-full: ## Run all tests
 
 train: ## Train the model
 	python src/train.py
+
+docker-build: ## Building Docker Image
+	sudo docker build . -t speech-generation:latest --no-cache
+
+docker-run:
+	sudo docker run -it \
+        --gpus all \
+        --mount type=bind,source=$(shell pwd),target=/workspace \
+		-e LOCAL_UID=$(shell id -u $(USER)) \
+		-e LOCAL_GID=$(shell id -g $(USER)) \
+        speech-generation:latest
