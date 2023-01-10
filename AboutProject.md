@@ -2,13 +2,26 @@
 
 ここにはこのリポジトリ内で開発するための基本的なツールやルールについて記述します。
 
-## 依存関係のセットアップ
+## 環境
 
-- Python3.9
-  [Miniforge3を使用しています。](https://github.com/conda-forge/miniforge)
+- Docker
+
+  - Base Docker Image
+
+    [`pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime`](https://hub.docker.com/layers/pytorch/pytorch/1.13.1-cuda11.6-cudnn8-runtime/images/sha256-1e26efd426b0fecbfe7cf3d3ae5003fada6ac5a76eddc1e042857f5d049605ee?context=explore)
+
+- Ubuntu 18.04 LT (x86_64)
+
+- Python3.10
+
+  conda 環境を使用しています。
+
 - make
+
   conda環境であれば`conda install make`でインストールすることができます。
+
 - Python poetry
+
   conda環境の場合は仮想環境に直接インストールします。
   `conda install poetry`
   そうでない場合はpipによるインストールか[公式のインストール方法を利用してください](https://python-poetry.org)
@@ -54,10 +67,15 @@ poetry install
 ### その他
 
 - dataディレクトリ
+
   学習用データを保存しておくディレクトリです。[README](/data/README.md)
+
 - logs
+
   学習時のログの出力先です。
+
 - scripts
+
   シェルスクリプトや汎用性の無い簡単なPythonスクリプトファイルを配置します。[README](/scripts/README.md)
 
 ## このプロジェクトで開発するために
@@ -80,6 +98,9 @@ poetry install
 [テストコードの実行やpre-commitなどのよく使用するコマンドはMakefileを使用して実行することができます。](/Makefile)
 
 - make format
+
   ファイルを整形しリンターを適用します。
+
 - make test / test-full
+
   テストコードを実行します。`test-full`では通常は実行時間がかかるためスキップするテストコードも全て実行します。
