@@ -10,7 +10,11 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.12"
+torch = "^1.13.1"
+torchvision = "^0.14.1"
+torchaudio = "^0.13.1"
+pynktrombonegym = {git = "https://github.com/matsuo-group24-PinkTrombone/PynkTromboneGym.git", rev = "master"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
