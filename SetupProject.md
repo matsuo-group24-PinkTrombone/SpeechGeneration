@@ -2,6 +2,10 @@
 
 本実験の環境は[Docker](https://docs.docker.com/)を用いて行います。**Pythonの依存関係以外は**すべてDockerイメージに保存されています。
 
+## AWS環境でのセットアップ
+
+Not implemented yet...
+
 ## Setup Docker
 
 [公式のインストール方法に従ってセットアップしてください](https://docs.docker.com/get-docker/)
@@ -29,7 +33,9 @@ git clone https://github.com/matsuo-group24-PinkTrombone/SpeechGeneration.git
 ```sh
 docker run -it \
     --gpus all \
-    --mount type=bind,source=./SpeechGeneration,target=/workspace \
+    --mount type=bind,source="$(pwd)/SpeechGeneration",target=/workspace \
+		-e LOCAL_UID=$(id -u $USER) \
+		-e LOCAL_GID=$(id -g $USER) \
     gesonanko/speech-generation:latest
 ```
 
@@ -39,11 +45,20 @@ docker run -it \
   root@90a59619c31f:/workspace#
   ```
 
-- Note: Dockerfileからローカルでビルドしたイメージを使用する事も出来ます。
+- Note: Dockerfileからローカルでビルドし、そのイメージを使用する事も出来ます。
 
   ```sh
   # in SpeeechGeneration project dir
-  docker build . -t speech-generation
+  make docker-build
+  make docker-run
+  ```
+
+  or
+
+  ```sh
+  # in SpeeechGeneration project dir
+  docker build . -t speech-generation:latest
+  docker run --args ...
   ```
 
 ### Pythonの依存関係をインストール
@@ -54,6 +69,8 @@ docker run -it \
 # /workspace
 poetry install
 ```
+
+(1/10 追記): Dockerのイメージ内にもPythonの依存関係をインストールしておく方針に変更しました。しかし、新しくプロジェクトに追加された依存関係が更新されていない可能性があるので上記のコマンドを実行することを推奨します。
 
 ## Run experiment
 
