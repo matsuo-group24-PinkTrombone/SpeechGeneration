@@ -4,7 +4,13 @@
 
 ## AWS環境でのセットアップ
 
-Not implemented yet...
+AWS環境の場合はセットアップスクリプトを作成してあります。
+AWSのJupyter Lab環境に入った後はターミナルを起動し、次のコマンドを実行してください。
+
+```sh
+wget https://raw.githubusercontent.com/matsuo-group24-PinkTrombone/SpeechGeneration/main/scripts/setup-on-aws.sh
+sh ./setup-on-aws.sh
+```
 
 ## Setup Docker
 
