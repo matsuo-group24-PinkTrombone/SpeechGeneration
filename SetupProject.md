@@ -33,7 +33,7 @@ git clone https://github.com/matsuo-group24-PinkTrombone/SpeechGeneration.git
 ```
 
 ```sh
-docker run -it \
+sudo docker run -it \
     --gpus all \
     --mount type=bind,source="$(pwd)/SpeechGeneration",target=/workspace \
 		-e LOCAL_UID=$(id -u $USER) \
@@ -59,8 +59,8 @@ docker run -it \
 
   ```sh
   # in SpeeechGeneration project dir
-  docker build . -t speech-generation:latest
-  docker run --args ...
+  sudo docker build . -t speech-generation:latest
+  sudo docker run --args ...
   ```
 
 - **Note: Docker Imageのルートパスワードは[Dockerfile](/Dockerfile)内の`RUN echo 'root:<pass>' | chpasswd` を参照してください。**
