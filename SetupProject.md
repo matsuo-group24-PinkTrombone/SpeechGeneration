@@ -42,7 +42,7 @@ docker run -it \
 - output
 
   ```sh
-  root@90a59619c31f:/workspace#
+  user@90a59619c31f:/workspace$
   ```
 
 - Note: Dockerfileからローカルでビルドし、そのイメージを使用する事も出来ます。
@@ -60,6 +60,8 @@ docker run -it \
   docker build . -t speech-generation:latest
   docker run --args ...
   ```
+
+- **Note: Docker Imageのルートパスワードは[Dockerfile](/Dockerfile)内の`RUN echo 'root:<pass>' | chpasswd` を参照してください。**
 
 ### Pythonの依存関係をインストール
 
