@@ -1,0 +1,5 @@
+{
+    "name": "gesonanko/speech-generation:latest",
+    "service": "gesonanko/speech-generation:latest",
+    "workspaceFolder": "/home/"
+  }
