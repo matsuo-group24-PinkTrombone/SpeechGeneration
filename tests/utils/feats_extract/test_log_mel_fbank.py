@@ -34,4 +34,3 @@ def test_output_size():
 def test_get_parameters():
     layer = LogMelFbank(n_fft=4, hop_length=1, n_mels=2, fs="16k")
     print(layer.get_parameters())
-

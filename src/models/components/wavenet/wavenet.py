@@ -1,10 +1,13 @@
 # Copyright 2021 Tomoki Hayashi
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 import logging
-from typing import Optional
-import torch
 import math
+from typing import Optional
+
+import torch
+
 from src.models.components.wavenet.residual_block import Conv1d1x1, ResidualBlock
+
 
 class WaveNet(torch.nn.Module):
     """WaveNet with global conditioning."""
@@ -52,7 +55,6 @@ class WaveNet(torch.nn.Module):
             use_last_conv (bool): Whether to use the last conv layers.
             scale_residual (bool): Whether to scale the residual outputs.
             scale_skip_connect (bool): Whether to scale the skip connection outputs.
-
         """
         super().__init__()
         self.layers = layers
@@ -121,7 +123,6 @@ class WaveNet(torch.nn.Module):
         Returns:
             Tensor: Output tensor (B, out_channels, T) if use_last_conv else
                 (B, residual_channels, T).
-
         """
         # encode to hidden representation
         if self.use_first_conv:

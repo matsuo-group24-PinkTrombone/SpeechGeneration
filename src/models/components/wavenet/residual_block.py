@@ -1,9 +1,11 @@
 # Copyright 2021 Tomoki Hayashi
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
-from typing import Optional, Tuple
-import torch
 import math
+from typing import Optional, Tuple
+
+import torch
 import torch.nn.functional as F
+
 
 class Conv1d(torch.nn.Conv1d):
     """Conv1d module with customized initialization."""
@@ -18,6 +20,7 @@ class Conv1d(torch.nn.Conv1d):
         if self.bias is not None:
             torch.nn.init.constant_(self.bias, 0.0)
 
+
 class Conv1d1x1(Conv1d):
     """1x1 Conv1d with customized initialization."""
 
@@ -26,6 +29,8 @@ class Conv1d1x1(Conv1d):
         super().__init__(
             in_channels, out_channels, kernel_size=1, padding=0, dilation=1, bias=bias
         )
+
+
 class ResidualBlock(torch.nn.Module):
     """Residual block module in WaveNet."""
 
@@ -53,7 +58,6 @@ class ResidualBlock(torch.nn.Module):
             dilation (int): Dilation factor.
             bias (bool): Whether to add bias parameter in convolution layers.
             scale_residual (bool): Whether to scale the residual outputs.
-
         """
         super().__init__()
         self.dropout_rate = dropout_rate
@@ -115,7 +119,6 @@ class ResidualBlock(torch.nn.Module):
         Returns:
             Tensor: Output tensor for residual connection (B, residual_channels, T).
             Tensor: Output tensor for skip connection (B, skip_channels, T).
-
         """
         residual = x
         x = F.dropout(x, p=self.dropout_rate, training=self.training)
@@ -153,6 +156,7 @@ class ResidualBlock(torch.nn.Module):
             x = x * math.sqrt(0.5)
 
         return x, s
+
 
 class Conv1d(torch.nn.Conv1d):
     """Conv1d module with customized initialization."""

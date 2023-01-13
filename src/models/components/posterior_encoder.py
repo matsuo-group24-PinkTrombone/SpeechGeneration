@@ -1,11 +1,13 @@
 # Copyright 2021 Tomoki Hayashi
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 from typing import Optional, Tuple
+
 import torch
 
 from src.models.components.wavenet import WaveNet
 from src.models.components.wavenet.residual_block import Conv1d
 from src.utils.nets_utils import make_non_pad_mask
+
 
 class PosteriorEncoder(torch.nn.Module):
     """Posterior encoder module in VITS.
@@ -45,7 +47,6 @@ class PosteriorEncoder(torch.nn.Module):
             dropout_rate (float): Dropout rate.
             bias (bool): Whether to use bias parameters in conv.
             use_weight_norm (bool): Whether to apply weight norm.
-
         """
         super().__init__()
 
@@ -88,7 +89,6 @@ class PosteriorEncoder(torch.nn.Module):
             Tensor: Projected mean tensor (B, out_channels, T_feats).
             Tensor: Projected scale tensor (B, out_channels, T_feats).
             Tensor: Mask tensor for input tensor (B, 1, T_feats).
-
         """
         x_mask = (
             make_non_pad_mask(x_lengths)

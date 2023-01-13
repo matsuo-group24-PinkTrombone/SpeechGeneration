@@ -7,7 +7,7 @@ from src.utils.nets_utils import make_pad_mask
 
 
 class LogMel(torch.nn.Module):
-    """Convert STFT to fbank feats
+    """Convert STFT to fbank feats.
 
     The arguments is same as librosa.filters.mel
 
@@ -74,11 +74,7 @@ class LogMel(torch.nn.Module):
 
         # Zero padding
         if ilens is not None:
-            logmel_feat = logmel_feat.masked_fill(
-                make_pad_mask(ilens, logmel_feat, 1), 0.0
-            )
+            logmel_feat = logmel_feat.masked_fill(make_pad_mask(ilens, logmel_feat, 1), 0.0)
         else:
-            ilens = feat.new_full(
-                [feat.size(0)], fill_value=feat.size(1), dtype=torch.long
-            )
+            ilens = feat.new_full([feat.size(0)], fill_value=feat.size(1), dtype=torch.long)
         return logmel_feat, ilens

@@ -54,7 +54,9 @@ def test_librosa_stft():
     assert torch.allclose(y_torch, y_librosa, atol=7e-6)
     torch._C.has_mkl = True
 
+
 if __name__ == "__main__":
-    import numpy as np
     import matplotlib.pyplot as plt
+    import numpy as np
+
     test_librosa_stft()

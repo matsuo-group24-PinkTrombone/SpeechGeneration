@@ -1,5 +1,6 @@
 import torch
 
+
 def make_pad_mask(lengths, xs=None, length_dim=-1, maxlen=None):
     """Make mask tensor containing indices of padded part.
 
@@ -84,10 +85,9 @@ def make_pad_mask(lengths, xs=None, length_dim=-1, maxlen=None):
                  [0, 0, 1, 1, 1, 1],
                  [0, 0, 1, 1, 1, 1],
                  [0, 0, 1, 1, 1, 1]]], dtype=torch.uint8)
-
     """
     if length_dim == 0:
-        raise ValueError("length_dim cannot be 0: {}".format(length_dim))
+        raise ValueError(f"length_dim cannot be 0: {length_dim}")
 
     if not isinstance(lengths, list):
         lengths = lengths.long().tolist()
@@ -113,9 +113,7 @@ def make_pad_mask(lengths, xs=None, length_dim=-1, maxlen=None):
         if length_dim < 0:
             length_dim = xs.dim() + length_dim
         # ind = (:, None, ..., None, :, , None, ..., None)
-        ind = tuple(
-            slice(None) if i in (0, length_dim) else None for i in range(xs.dim())
-        )
+        ind = tuple(slice(None) if i in (0, length_dim) else None for i in range(xs.dim()))
         mask = mask[ind].expand_as(xs).to(xs.device)
     return mask
 
@@ -204,6 +202,5 @@ def make_non_pad_mask(lengths, xs=None, length_dim=-1):
                  [1, 1, 0, 0, 0, 0],
                  [1, 1, 0, 0, 0, 0],
                  [1, 1, 0, 0, 0, 0]]], dtype=torch.uint8)
-
     """
     return ~make_pad_mask(lengths, xs, length_dim)

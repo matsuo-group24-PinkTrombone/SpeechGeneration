@@ -4,9 +4,9 @@ import humanfriendly
 import torch
 from typeguard import check_argument_types
 
+from src.utils.feats_extract.abs_feats_extract import AbsFeatsExtract
 from src.utils.layers.log_mel import LogMel
 from src.utils.layers.stft import Stft
-from src.utils.feats_extract.abs_feats_extract import AbsFeatsExtract
 
 
 class LogMelFbank(AbsFeatsExtract):
@@ -69,7 +69,7 @@ class LogMelFbank(AbsFeatsExtract):
         return self.n_mels
 
     def get_parameters(self) -> Dict[str, Any]:
-        """Return the parameters required by Vocoder"""
+        """Return the parameters required by Vocoder."""
         return dict(
             fs=self.fs,
             n_fft=self.n_fft,
