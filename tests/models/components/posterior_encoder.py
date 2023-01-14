@@ -4,7 +4,7 @@ import torch
 from src.models.components.posterior_encoder import PosteriorEncoder
 from src.utils.feats_extract.log_mel_fbank import LogMelFbank
 
-if __name__ == "__main__":
+def test_posterior_encoder():
     # train_config
     batch_size = 1
 
