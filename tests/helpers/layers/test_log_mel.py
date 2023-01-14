@@ -1,6 +1,6 @@
 import torch
 
-from src.utils.layers.log_mel import LogMel
+from log_mel import LogMel
 
 
 def test_repr():

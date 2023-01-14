@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from src.models.components.posterior_encoder import PosteriorEncoderVITS
-from src.utils.feats_extract.log_mel_fbank import LogMelFbank
+from tests.helpers.feats_extract.log_mel_fbank import LogMelFbank
 
 def test_posterior_encoder():
     # train_config
@@ -79,6 +79,3 @@ def test_posterior_encoder():
     print(f"z:{z}")
     print(f"m_q:{m_q}")
     print(f"logs_q:{logs_q}")
-
-if __name__ == "__main__":
-    test_posterior_encoder()

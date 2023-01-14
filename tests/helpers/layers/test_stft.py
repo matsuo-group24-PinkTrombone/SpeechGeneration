@@ -1,6 +1,6 @@
 import torch
 
-from src.utils.layers.stft import Stft
+from stft import Stft
 
 
 def test_repr():

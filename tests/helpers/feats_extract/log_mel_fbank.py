@@ -4,9 +4,9 @@ import humanfriendly
 import torch
 from typeguard import check_argument_types
 
-from .abs_feats_extract import AbsFeatsExtract
-from ..layers.log_mel import LogMel
-from ..layers.stft import Stft
+from tests.helpers.feats_extract.abs_feats_extract import AbsFeatsExtract
+from tests.helpers.layers.log_mel import LogMel
+from tests.helpers.layers.stft import Stft
 
 
 class LogMelFbank(AbsFeatsExtract):
