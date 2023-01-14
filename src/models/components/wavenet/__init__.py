@@ -1,1 +1,1 @@
-from src.models.components.wavenet.wavenet import WaveNet
+from .wavenet import WaveNet
