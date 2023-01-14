@@ -4,8 +4,8 @@ import humanfriendly
 import torch
 from typeguard import check_argument_types
 
-from abs_feats_extract import AbsFeatsExtract
-from ..log_mel import LogMel
+from .abs_feats_extract import AbsFeatsExtract
+from ..layers.log_mel import LogMel
 from ..layers.stft import Stft
 
 

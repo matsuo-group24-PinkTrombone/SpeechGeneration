@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from src.models.components.posterior_encoder import PosteriorEncoder
+from src.models.components.posterior_encoder import PosteriorEncoderVITS
 from src.utils.feats_extract.log_mel_fbank import LogMelFbank
 
 def test_posterior_encoder():
@@ -22,7 +22,7 @@ def test_posterior_encoder():
     use_weight_norm = True  # Whether to apply weight norm.
 
     # instanse
-    posterior_encoder = PosteriorEncoder(
+    posterior_encoder = PosteriorEncoderVITS(
         in_channels=aux_channels,
         out_channels=hidden_channels,
         hidden_channels=hidden_channels,
@@ -79,3 +79,6 @@ def test_posterior_encoder():
     print(f"z:{z}")
     print(f"m_q:{m_q}")
     print(f"logs_q:{logs_q}")
+
+if __name__ == "__main__":
+    test_posterior_encoder()

@@ -6,7 +6,7 @@ from typing import Optional
 
 import torch
 
-from residual_block import Conv1d1x1, ResidualBlock
+from .residual_block import Conv1d1x1, ResidualBlock
 
 
 class WaveNet(torch.nn.Module):
