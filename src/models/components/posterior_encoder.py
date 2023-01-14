@@ -9,7 +9,7 @@ from .wavenet.residual_block import Conv1d
 from ...utils.nets_utils import make_non_pad_mask
 
 
-class PosteriorEncoder(torch.nn.Module):
+class PosteriorEncoderVITS(torch.nn.Module):
     """Posterior encoder module in VITS.
 
     This is a module of posterior encoder described in `Conditional Variational
