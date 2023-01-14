@@ -62,6 +62,6 @@ def test_wavenet_forward(model_dict):
     model = WaveNet(**args)
     out = model(y, c=c, g=g)
     if args["use_last_conv"]:
-        out.size(1) == args["out_channels"]
+        assert out.size(1) == args["out_channels"]
     else:
-        out.size(1) == args["skip_channels"]
+        assert out.size(1) == args["skip_channels"]
