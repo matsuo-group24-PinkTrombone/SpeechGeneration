@@ -1,11 +1,10 @@
 #!/bin/bash
 
-USER_ID=${LOCAL_UID:-9001}
-GROUP_ID=${LOCAL_GID:-9001}
+echo "Working in $(pwd)"
 
-echo "Starting with UID : $USER_ID, GID: $GROUP_ID"
-useradd -u "${USER_ID}" -o -m user
-groupmod -g "$GROUP_ID" user
-export HOME=/home/user
+REPOSITORY_URL="https://github.com/matsuo-group24-PinkTrombone/SpeechGeneration.git"
 
-exec /usr/sbin/gosu user "$@"
+[ -d ".git" ] && git fetch && git pull
+[ ! -d ".git" ] && git clone "$REPOSITORY_URL" ./
+
+exec /bin/bash
