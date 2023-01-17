@@ -17,6 +17,11 @@ def test_Transition():
         def forward(self, state: Tensor, hidden: Tensor, action: Tensor) -> Tensor:
             return torch.randn(10)
 
+        @property
+        def hidden_shape(self) -> tuple[int]:
+            return (10,)
+
     dummy = torch.randn(10)
     c = C()
     c.forward(dummy, dummy, dummy)
+    c.hidden_shape
