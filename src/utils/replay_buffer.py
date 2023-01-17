@@ -24,13 +24,14 @@ class ReplayBuffer():
         self.current_index = (self.current_index + 1) % self.buffer_size 
         
     def sample(self, batch_size: int, chunk_length: int, chunk_first: bool = True) -> Dict[str, np.ndarray]:
-        samples_list = []
+        sample_list = []
         for _ in range(batch_size):
-            sample = self.sample_chunk(chunk_length)
-            for space_name, value in sample.items():
-
-            
-
+            sample_list.append(self.sample_chunk(chunk_length))
+        samples = np.stack(sample_list) # samples.shape -> (batch_size, chunk_length, *)
+        if chunk_first:
+            samples.transpose((0, 1))
+        return samples
+        
     def sample_chunk(self,chunk_length:int,) -> Dict[str, np.ndarray]:
         start_index = np.random.randint(0, self.buffer_size)
         sampled_indice = (np.arange(chunk_length) + start_index)
@@ -38,7 +39,7 @@ class ReplayBuffer():
         return sampled_data
 
     def __len__(self):
-        pass
+        return self.current_index + 1
 
     def init_values(self):
         initialized_memory = {}
