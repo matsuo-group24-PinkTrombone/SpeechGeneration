@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from tests.helpers.feets_extract.log_mel_fbank import LogMelFbank
+from tests.helpers.feats_extract.log_mel_fbank import LogMelFbank
 
 
 def test_forward():
