@@ -9,8 +9,9 @@ from ._types import _t_or_any, _tensor_or_any
 class ObservationEncoder(nn.Module, ABC):
     """Abstract observation encoder model class.
 
-    This model gets `hidden` and `obs` and returns `state` in :meth:`forward`     i.e. s_t ~
-    q_E(s_t|h_t, o_t)
+    This model gets `hidden` and `obs` and returns `state` in :meth:`forward`
+
+        i.e. s_t ~ q_E(s_t | h_t, o_t)
     """
 
     @abstractmethod
@@ -53,3 +54,25 @@ class ObservationEncoder(nn.Module, ABC):
         embedded_obs = self.embed_observation(obs)
         state = self.encode(hidden, embedded_obs)
         return state
+
+
+class ObservationDecoder(nn.Module, ABC):
+    """Abstract observation decoder class.
+
+    This model gets `hidden` and `state`, after returns `observation` in :meth:`forward`.
+
+        i.e. o_t ~ p_D(o_t | h_t, s_t)
+    """
+
+    @abstractmethod
+    def forward(self, hidden: _tensor_or_any, state: _tensor_or_any) -> _tensor_or_any:
+        """Decode to observation.
+        Args:
+            hidden (_tensor_or_any): hidden state `h_t`.
+            state (_tensor_or_any): world state `s_t`.
+
+        Returns:
+            obs (_tensor_or_any): reconstructed observation (o^_t).
+                For instance, obs=(voc state v_t, generated sound g_t) is returned.
+        """
+        pass

@@ -36,3 +36,21 @@ def test_ObservationEncoder():
     norm = c.forward(dummy, dummy.abs())
     assert torch.all(norm.loc == dummy)
     assert torch.all(norm.scale == dummy.abs() + 1)
+
+
+def test_ObservationDecoder():
+    cls = mod.ObservationDecoder
+
+    try:
+        cls()
+        assert False, "Not raised TypeError"
+    except TypeError:
+        pass
+
+    class C(cls):
+        def forward(self, hidden: Tensor, state: Tensor) -> Tensor:
+            return torch.randn(10)
+
+    dummy = torch.randn(10)
+    c = C()
+    c.forward(dummy, dummy)
