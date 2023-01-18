@@ -53,9 +53,9 @@ def test_learnedFourierPe_extendable(dtype, device, apply_scaling, hidden_dim):
         pytest.skip("no cuda device is available")
     dtype = getattr(torch, dtype)
     dim = 2
-    pe = LearnableFourierPosEnc(
-        dim, apply_scaling=apply_scaling, hidden_dim=hidden_dim
-    ).to(dtype=dtype, device=device)
+    pe = LearnableFourierPosEnc(dim, apply_scaling=apply_scaling, hidden_dim=hidden_dim).to(
+        dtype=dtype, device=device
+    )
     x = torch.rand(2, 3, dim, dtype=dtype, device=device)
     pe(x)
 
@@ -105,8 +105,7 @@ class LegacyPositionalEncoding(torch.nn.Module):
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float32).unsqueeze(1)
         div_term = torch.exp(
-            torch.arange(0, d_model, 2, dtype=torch.float32)
-            * -(math.log(10000.0) / d_model)
+            torch.arange(0, d_model, 2, dtype=torch.float32) * -(math.log(10000.0) / d_model)
         )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
@@ -133,12 +132,10 @@ class LegacyScaledPositionalEncoding(LegacyPositionalEncoding):
 
 
 def test_compatibility():
-    """Regression test for #1121"""
+    """Regression test for #1121."""
     x = torch.rand(2, 3, 4)
 
-    legacy_net = torch.nn.Sequential(
-        LegacyPositionalEncoding(4, 0.0), torch.nn.Linear(4, 2)
-    )
+    legacy_net = torch.nn.Sequential(LegacyPositionalEncoding(4, 0.0), torch.nn.Linear(4, 2))
 
     latest_net = torch.nn.Sequential(PositionalEncoding(4, 0.0), torch.nn.Linear(4, 2))
 
@@ -147,13 +144,9 @@ def test_compatibility():
     latest = latest_net(x)
     assert torch.allclose(legacy, latest)
 
-    legacy_net = torch.nn.Sequential(
-        LegacyScaledPositionalEncoding(4, 0.0), torch.nn.Linear(4, 2)
-    )
+    legacy_net = torch.nn.Sequential(LegacyScaledPositionalEncoding(4, 0.0), torch.nn.Linear(4, 2))
 
-    latest_net = torch.nn.Sequential(
-        ScaledPositionalEncoding(4, 0.0), torch.nn.Linear(4, 2)
-    )
+    latest_net = torch.nn.Sequential(ScaledPositionalEncoding(4, 0.0), torch.nn.Linear(4, 2))
 
     latest_net.load_state_dict(legacy_net.state_dict())
     legacy = legacy_net(x)

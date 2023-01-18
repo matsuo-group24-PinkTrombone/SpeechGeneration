@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # Copyright 2019 Shigeki Karita
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
@@ -25,7 +24,6 @@ def _pre_hook(
     Note:
         We saved self.pe until v.0.5.2 but we have omitted it later.
         Therefore, we remove the item "pe" from `state_dict` for backward compatibility.
-
     """
     k = prefix + "pe"
     if k in state_dict:
@@ -46,7 +44,7 @@ class PositionalEncoding(torch.nn.Module):
 
     def __init__(self, d_model, dropout_rate, max_len=5000, reverse=False):
         """Construct an PositionalEncoding object."""
-        super(PositionalEncoding, self).__init__()
+        super().__init__()
         self.d_model = d_model
         self.reverse = reverse
         self.xscale = math.sqrt(self.d_model)
@@ -64,9 +62,7 @@ class PositionalEncoding(torch.nn.Module):
                 return
         pe = torch.zeros(x.size(1), self.d_model)
         if self.reverse:
-            position = torch.arange(
-                x.size(1) - 1, -1, -1.0, dtype=torch.float32
-            ).unsqueeze(1)
+            position = torch.arange(x.size(1) - 1, -1, -1.0, dtype=torch.float32).unsqueeze(1)
         else:
             position = torch.arange(0, x.size(1), dtype=torch.float32).unsqueeze(1)
         div_term = torch.exp(
@@ -101,7 +97,6 @@ class ScaledPositionalEncoding(PositionalEncoding):
         d_model (int): Embedding dimension.
         dropout_rate (float): Dropout rate.
         max_len (int): Maximum input length.
-
     """
 
     def __init__(self, d_model, dropout_rate, max_len=5000):
@@ -121,7 +116,6 @@ class ScaledPositionalEncoding(PositionalEncoding):
 
         Returns:
             torch.Tensor: Encoded tensor (batch, time, `*`).
-
         """
         self.extend_pe(x)
         x = x + self.alpha * self.pe[:, : x.size(1)]
@@ -154,7 +148,7 @@ class LearnableFourierPosEnc(torch.nn.Module):
         hidden_dim=None,
     ):
         """Initialize class."""
-        super(LearnableFourierPosEnc, self).__init__()
+        super().__init__()
 
         self.d_model = d_model
 
@@ -170,9 +164,7 @@ class LearnableFourierPosEnc(torch.nn.Module):
         if self.gamma is None:
             self.gamma = self.d_model // 2
 
-        assert (
-            d_model % 2 == 0
-        ), "d_model should be divisible by two in order to use this layer."
+        assert d_model % 2 == 0, "d_model should be divisible by two in order to use this layer."
         self.w_r = torch.nn.Parameter(torch.empty(1, d_model // 2))
         self._reset()  # init the weights
 
@@ -185,9 +177,7 @@ class LearnableFourierPosEnc(torch.nn.Module):
             )
 
     def _reset(self):
-        self.w_r.data = torch.normal(
-            0, (1 / math.sqrt(self.gamma)), (1, self.d_model // 2)
-        )
+        self.w_r.data = torch.normal(0, (1 / math.sqrt(self.gamma)), (1, self.d_model // 2))
 
     def extend_pe(self, x):
         """Reset the positional encodings."""
@@ -228,7 +218,6 @@ class LegacyRelPositionalEncoding(PositionalEncoding):
         d_model (int): Embedding dimension.
         dropout_rate (float): Dropout rate.
         max_len (int): Maximum input length.
-
     """
 
     def __init__(self, d_model, dropout_rate, max_len=5000):
@@ -249,7 +238,6 @@ class LegacyRelPositionalEncoding(PositionalEncoding):
         Returns:
             torch.Tensor: Encoded tensor (batch, time, `*`).
             torch.Tensor: Positional embedding tensor (1, time, `*`).
-
         """
         self.extend_pe(x)
         x = x * self.xscale
@@ -268,12 +256,11 @@ class RelPositionalEncoding(torch.nn.Module):
         d_model (int): Embedding dimension.
         dropout_rate (float): Dropout rate.
         max_len (int): Maximum input length.
-
     """
 
     def __init__(self, d_model, dropout_rate, max_len=5000):
         """Construct an PositionalEncoding object."""
-        super(RelPositionalEncoding, self).__init__()
+        super().__init__()
         self.d_model = d_model
         self.xscale = math.sqrt(self.d_model)
         self.dropout = torch.nn.Dropout(p=dropout_rate)
@@ -289,7 +276,7 @@ class RelPositionalEncoding(torch.nn.Module):
                 if self.pe.dtype != x.dtype or self.pe.device != x.device:
                     self.pe = self.pe.to(dtype=x.dtype, device=x.device)
                 return
-        # Suppose `i` means to the position of query vecotr and `j` means the
+        # Suppose `i` means to the position of query vector and `j` means the
         # position of key vector. We use position relative positions when keys
         # are to the left (i>j) and negative relative positions otherwise (i<j).
         pe_positive = torch.zeros(x.size(1), self.d_model)
@@ -320,7 +307,6 @@ class RelPositionalEncoding(torch.nn.Module):
 
         Returns:
             torch.Tensor: Encoded tensor (batch, time, `*`).
-
         """
         self.extend_pe(x)
         x = x * self.xscale
@@ -338,12 +324,11 @@ class StreamPositionalEncoding(torch.nn.Module):
         d_model (int): Embedding dimension.
         dropout_rate (float): Dropout rate.
         max_len (int): Maximum input length.
-
     """
 
     def __init__(self, d_model, dropout_rate, max_len=5000):
         """Construct an PositionalEncoding object."""
-        super(StreamPositionalEncoding, self).__init__()
+        super().__init__()
         self.d_model = d_model
         self.xscale = math.sqrt(self.d_model)
         self.dropout = torch.nn.Dropout(p=dropout_rate)
@@ -378,7 +363,6 @@ class StreamPositionalEncoding(torch.nn.Module):
 
         Returns:
             torch.Tensor: Encoded tensor (batch, time, `*`).
-
         """
         self.extend_pe(x.size(1) + start_idx, x.device, x.dtype)
         x = x * self.xscale + self.pe[:, start_idx : start_idx + x.size(1)]

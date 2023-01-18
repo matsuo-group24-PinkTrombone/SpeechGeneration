@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # Copyright 2020 Johns Hopkins University (Shinji Watanabe)
 #                Northwestern Polytechnical University (Pengcheng Guo)
@@ -14,5 +13,5 @@ class Swish(torch.nn.Module):
     """Construct an Swish object."""
 
     def forward(self, x):
-        """Return Swich activation function."""
+        """Return Swish activation function."""
         return x * torch.sigmoid(x)

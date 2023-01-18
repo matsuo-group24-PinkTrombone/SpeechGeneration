@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # Copyright 2019 Tomoki Hayashi
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
@@ -19,7 +18,6 @@ class MultiLayeredConv1d(torch.nn.Module):
 
     .. _`FastSpeech: Fast, Robust and Controllable Text to Speech`:
         https://arxiv.org/pdf/1905.09263.pdf
-
     """
 
     def __init__(self, in_chans, hidden_chans, kernel_size, dropout_rate):
@@ -30,9 +28,8 @@ class MultiLayeredConv1d(torch.nn.Module):
             hidden_chans (int): Number of hidden channels.
             kernel_size (int): Kernel size of conv1d.
             dropout_rate (float): Dropout rate.
-
         """
-        super(MultiLayeredConv1d, self).__init__()
+        super().__init__()
         self.w_1 = torch.nn.Conv1d(
             in_chans,
             hidden_chans,
@@ -57,16 +54,15 @@ class MultiLayeredConv1d(torch.nn.Module):
 
         Returns:
             torch.Tensor: Batch of output tensors (B, T, hidden_chans).
-
         """
         x = torch.relu(self.w_1(x.transpose(-1, 1))).transpose(-1, 1)
         return self.w_2(self.dropout(x).transpose(-1, 1)).transpose(-1, 1)
+
 
 class Conv1dLinear(torch.nn.Module):
     """Conv1D + Linear for Transformer block.
 
     A variant of MultiLayeredConv1d, which replaces second conv-layer to linear.
-
     """
 
     def __init__(self, in_chans, hidden_chans, kernel_size, dropout_rate):
@@ -77,9 +73,8 @@ class Conv1dLinear(torch.nn.Module):
             hidden_chans (int): Number of hidden channels.
             kernel_size (int): Kernel size of conv1d.
             dropout_rate (float): Dropout rate.
-
         """
-        super(Conv1dLinear, self).__init__()
+        super().__init__()
         self.w_1 = torch.nn.Conv1d(
             in_chans,
             hidden_chans,
@@ -98,7 +93,6 @@ class Conv1dLinear(torch.nn.Module):
 
         Returns:
             torch.Tensor: Batch of output tensors (B, T, hidden_chans).
-
         """
         x = torch.relu(self.w_1(x.transpose(-1, 1))).transpose(-1, 1)
         return self.w_2(self.dropout(x))

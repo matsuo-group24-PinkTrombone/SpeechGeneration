@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # Copyright 2020 Johns Hopkins University (Shinji Watanabe)
 #                Northwestern Polytechnical University (Pengcheng Guo)
@@ -53,7 +52,7 @@ class EncoderLayer(nn.Module):
         stochastic_depth_rate=0.0,
     ):
         """Construct an EncoderLayer object."""
-        super(EncoderLayer, self).__init__()
+        super().__init__()
         self.self_attn = self_attn
         self.feed_forward = feed_forward
         self.feed_forward_macaron = feed_forward_macaron
@@ -89,7 +88,6 @@ class EncoderLayer(nn.Module):
         Returns:
             torch.Tensor: Output tensor (#batch, time, size).
             torch.Tensor: Mask tensor (#batch, time).
-
         """
         if isinstance(x_input, tuple):
             x, pos_emb = x_input[0], x_input[1]
@@ -161,9 +159,7 @@ class EncoderLayer(nn.Module):
         residual = x
         if self.normalize_before:
             x = self.norm_ff(x)
-        x = residual + stoch_layer_coeff * self.ff_scale * self.dropout(
-            self.feed_forward(x)
-        )
+        x = residual + stoch_layer_coeff * self.ff_scale * self.dropout(self.feed_forward(x))
         if not self.normalize_before:
             x = self.norm_ff(x)
 

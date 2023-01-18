@@ -6,17 +6,14 @@
 
 import torch
 
-from .convolution import ConvolutionModule
-from .encoder_layer import EncoderLayer
 from ....utils.nets_utils import get_activation
 from .attention import (
-    LegacyRelPositionMultiHeadedAttention,RelPositionMultiHeadedAttention
+    LegacyRelPositionMultiHeadedAttention,
+    RelPositionMultiHeadedAttention,
 )
-
-from .embedding import (
-    LegacyRelPositionalEncoding,
-    RelPositionalEncoding
-)
+from .convolution import ConvolutionModule
+from .embedding import LegacyRelPositionalEncoding, RelPositionalEncoding
+from .encoder_layer import EncoderLayer
 from .layer_norm import LayerNorm
 from .multi_layer_conv import MultiLayeredConv1d
 from .repeat import repeat
@@ -48,14 +45,13 @@ class Encoder(torch.nn.Module):
         activation_type (str): Encoder activation function type.
         use_cnn_module (bool): Whether to use convolution module.
         zero_triu (bool): Whether to zero the upper triangular part of attention matrix.
-        cnn_module_kernel (int): Kernerl size of convolution module.
+        cnn_module_kernel (int): Kernel size of convolution module.
         padding_idx (int): Padding idx for input_layer=embed.
         stochastic_depth_rate (float): Maximum probability to skip the encoder layer.
         intermediate_layers (Union[List[int], None]): indices of intermediate CTC layer.
             indices start from 1.
             if not None, intermediate outputs are returned (which changes return type
             signature.)
-
     """
 
     def __init__(
@@ -87,7 +83,7 @@ class Encoder(torch.nn.Module):
         conditioning_layer_dim=None,
     ):
         """Construct an Encoder object."""
-        super(Encoder, self).__init__()
+        super().__init__()
 
         activation = get_activation(activation_type)
         if pos_enc_layer_type == "legacy_rel_pos":
@@ -118,9 +114,7 @@ class Encoder(torch.nn.Module):
                 pos_enc_class(attention_dim, positional_dropout_rate),
             )
         elif input_layer is None:
-            self.embed = torch.nn.Sequential(
-                pos_enc_class(attention_dim, positional_dropout_rate)
-            )
+            self.embed = torch.nn.Sequential(pos_enc_class(attention_dim, positional_dropout_rate))
         else:
             raise ValueError("unknown input_layer: " + input_layer)
         self.normalize_before = normalize_before
@@ -183,9 +177,7 @@ class Encoder(torch.nn.Module):
         self.use_conditioning = True if ctc_softmax is not None else False
         if self.use_conditioning:
             self.ctc_softmax = ctc_softmax
-            self.conditioning_layer = torch.nn.Linear(
-                conditioning_layer_dim, attention_dim
-            )
+            self.conditioning_layer = torch.nn.Linear(conditioning_layer_dim, attention_dim)
 
     def forward(self, xs, masks):
         """Encode input sequence.
@@ -197,7 +189,6 @@ class Encoder(torch.nn.Module):
         Returns:
             torch.Tensor: Output tensor (#batch, time, attention_dim).
             torch.Tensor: Mask tensor (#batch, time).
-
         """
         xs = self.embed(xs)
 

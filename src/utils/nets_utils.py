@@ -205,6 +205,7 @@ def make_non_pad_mask(lengths, xs=None, length_dim=-1):
     """
     return ~make_pad_mask(lengths, xs, length_dim)
 
+
 def get_activation(act):
     """Return activation function."""
     # Lazy load to avoid unused import

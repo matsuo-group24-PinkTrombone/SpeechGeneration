@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # Copyright 2019 Nagoya University (Tomoki Hayashi)
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
@@ -10,16 +9,15 @@ import six
 import torch
 import torch.nn.functional as F
 
+
 class Postnet(torch.nn.Module):
-    """Postnet module for Spectrogram prediction network.
-    This is a module of Postnet in Spectrogram prediction network,
-    which described in `Natural TTS Synthesis by
-    Conditioning WaveNet on Mel Spectrogram Predictions`_.
-    The Postnet predicts refines the predicted
-    Mel-filterbank of the decoder,
-    which helps to compensate the detail structure of spectrogram.
+    """Postnet module for Spectrogram prediction network. This is a module of Postnet in
+    Spectrogram prediction network, which described in `Natural TTS Synthesis by Conditioning
+    WaveNet on Mel Spectrogram Predictions`_. The Postnet predicts refines the predicted Mel-
+    filterbank of the decoder, which helps to compensate the detail structure of spectrogram.
+
     .. _`Natural TTS Synthesis by Conditioning WaveNet on Mel Spectrogram Predictions`:
-       https://arxiv.org/abs/1712.05884
+    https://arxiv.org/abs/1712.05884
     """
 
     def __init__(
@@ -33,6 +31,7 @@ class Postnet(torch.nn.Module):
         use_batch_norm=True,
     ):
         """Initialize postnet module.
+
         Args:
             idim (int): Dimension of the inputs.
             odim (int): Dimension of the outputs.
@@ -42,9 +41,9 @@ class Postnet(torch.nn.Module):
             use_batch_norm (bool, optional): Whether to use batch normalization..
             dropout_rate (float, optional): Dropout rate..
         """
-        super(Postnet, self).__init__()
+        super().__init__()
         self.postnet = torch.nn.ModuleList()
-        for layer in six.moves.range(n_layers - 1):
+        for layer in range(n_layers - 1):
             ichans = odim if layer == 0 else n_chans
             ochans = odim if layer == n_layers - 1 else n_chans
             if use_batch_norm:
@@ -111,11 +110,12 @@ class Postnet(torch.nn.Module):
 
     def forward(self, xs):
         """Calculate forward propagation.
+
         Args:
             xs (Tensor): Batch of the sequences of padded input tensors (B, idim, Tmax).
         Returns:
             Tensor: Batch of padded output tensor. (B, odim, Tmax).
         """
-        for i in six.moves.range(len(self.postnet)):
+        for i in range(len(self.postnet)):
             xs = self.postnet[i](xs)
         return xs

@@ -3,8 +3,9 @@ from pytest import mark
 
 from src.models.components.conformer.repeat import repeat
 
-@mark.parametrize("N_repeat", [1,3,5])
-def test_repeat(N_repeat:int):
+
+@mark.parametrize("N_repeat", [1, 3, 5])
+def test_repeat(N_repeat: int):
     """
     Example:
     N_repeat=3でLinearを繰り返す場合
@@ -16,5 +17,5 @@ def test_repeat(N_repeat:int):
       (2): Linear(in_features=3, out_features=4, bias=True)
     )
     """
-    repeated_layer = repeat(N_repeat,lambda n:torch.nn.Linear(n+1,n+2))
+    repeated_layer = repeat(N_repeat, lambda n: torch.nn.Linear(n + 1, n + 2))
     assert len(repeated_layer) == N_repeat

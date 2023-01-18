@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # Copyright 2019 Shigeki Karita
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
@@ -11,6 +10,7 @@ import math
 import torch
 from torch import nn
 
+
 class MultiHeadedAttention(nn.Module):
     """Multi-Head Attention layer.
 
@@ -18,12 +18,11 @@ class MultiHeadedAttention(nn.Module):
         n_head (int): The number of heads.
         n_feat (int): The number of features.
         dropout_rate (float): Dropout rate.
-
     """
 
     def __init__(self, n_head, n_feat, dropout_rate):
         """Construct an MultiHeadedAttention object."""
-        super(MultiHeadedAttention, self).__init__()
+        super().__init__()
         assert n_feat % n_head == 0
         # We assume d_v always equals d_k
         self.d_k = n_feat // n_head
@@ -47,7 +46,6 @@ class MultiHeadedAttention(nn.Module):
             torch.Tensor: Transformed query tensor (#batch, n_head, time1, d_k).
             torch.Tensor: Transformed key tensor (#batch, n_head, time2, d_k).
             torch.Tensor: Transformed value tensor (#batch, n_head, time2, d_k).
-
         """
         n_batch = query.size(0)
         q = self.linear_q(query).view(n_batch, -1, self.h, self.d_k)
@@ -70,7 +68,6 @@ class MultiHeadedAttention(nn.Module):
         Returns:
             torch.Tensor: Transformed value (#batch, time1, d_model)
                 weighted by the attention score (#batch, time1, time2).
-
         """
         n_batch = value.size(0)
         if mask is not None:
@@ -103,11 +100,11 @@ class MultiHeadedAttention(nn.Module):
 
         Returns:
             torch.Tensor: Output tensor (#batch, time1, d_model).
-
         """
         q, k, v = self.forward_qkv(query, key, value)
         scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_k)
         return self.forward_attention(v, scores, mask)
+
 
 class LegacyRelPositionMultiHeadedAttention(MultiHeadedAttention):
     """Multi-Head Attention layer with relative position encoding (old version).
@@ -121,7 +118,6 @@ class LegacyRelPositionMultiHeadedAttention(MultiHeadedAttention):
         n_feat (int): The number of features.
         dropout_rate (float): Dropout rate.
         zero_triu (bool): Whether to zero the upper triangular part of attention matrix.
-
     """
 
     def __init__(self, n_head, n_feat, dropout_rate, zero_triu=False):
@@ -145,7 +141,6 @@ class LegacyRelPositionMultiHeadedAttention(MultiHeadedAttention):
 
         Returns:
             torch.Tensor: Output tensor.
-
         """
         zero_pad = torch.zeros((*x.size()[:3], 1), device=x.device, dtype=x.dtype)
         x_padded = torch.cat([zero_pad, x], dim=-1)
@@ -172,7 +167,6 @@ class LegacyRelPositionMultiHeadedAttention(MultiHeadedAttention):
 
         Returns:
             torch.Tensor: Output tensor (#batch, time1, d_model).
-
         """
         q, k, v = self.forward_qkv(query, key, value)
         q = q.transpose(1, 2)  # (batch, time1, head, d_k)
@@ -197,11 +191,10 @@ class LegacyRelPositionMultiHeadedAttention(MultiHeadedAttention):
         matrix_bd = torch.matmul(q_with_bias_v, p.transpose(-2, -1))
         matrix_bd = self.rel_shift(matrix_bd)
 
-        scores = (matrix_ac + matrix_bd) / math.sqrt(
-            self.d_k
-        )  # (batch, head, time1, time2)
+        scores = (matrix_ac + matrix_bd) / math.sqrt(self.d_k)  # (batch, head, time1, time2)
 
         return self.forward_attention(v, scores, mask)
+
 
 class RelPositionMultiHeadedAttention(MultiHeadedAttention):
     """Multi-Head Attention layer with relative position encoding (new implementation).
@@ -215,7 +208,6 @@ class RelPositionMultiHeadedAttention(MultiHeadedAttention):
         n_feat (int): The number of features.
         dropout_rate (float): Dropout rate.
         zero_triu (bool): Whether to zero the upper triangular part of attention matrix.
-
     """
 
     def __init__(self, n_head, n_feat, dropout_rate, zero_triu=False):
@@ -240,7 +232,6 @@ class RelPositionMultiHeadedAttention(MultiHeadedAttention):
 
         Returns:
             torch.Tensor: Output tensor.
-
         """
         zero_pad = torch.zeros((*x.size()[:3], 1), device=x.device, dtype=x.dtype)
         x_padded = torch.cat([zero_pad, x], dim=-1)
@@ -270,7 +261,6 @@ class RelPositionMultiHeadedAttention(MultiHeadedAttention):
 
         Returns:
             torch.Tensor: Output tensor (#batch, time1, d_model).
-
         """
         q, k, v = self.forward_qkv(query, key, value)
         q = q.transpose(1, 2)  # (batch, time1, head, d_k)
@@ -295,8 +285,6 @@ class RelPositionMultiHeadedAttention(MultiHeadedAttention):
         matrix_bd = torch.matmul(q_with_bias_v, p.transpose(-2, -1))
         matrix_bd = self.rel_shift(matrix_bd)
 
-        scores = (matrix_ac + matrix_bd) / math.sqrt(
-            self.d_k
-        )  # (batch, head, time1, time2)
+        scores = (matrix_ac + matrix_bd) / math.sqrt(self.d_k)  # (batch, head, time1, time2)
 
         return self.forward_attention(v, scores, mask)
