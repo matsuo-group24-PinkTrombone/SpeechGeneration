@@ -34,3 +34,4 @@ class Prior(nn.Module, ABC):
 
         Do not contain batch dim.
         """
+        pass

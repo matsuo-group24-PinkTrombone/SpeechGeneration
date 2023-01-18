@@ -48,6 +48,7 @@ class ObservationEncoder(nn.Module, ABC):
 
         Do not contain batch dim.
         """
+        pass
 
     def forward(self, hidden: _tensor_or_any, obs: _tensor_or_any) -> _t_or_any[Distribution]:
         """Forward path of encoder."""
