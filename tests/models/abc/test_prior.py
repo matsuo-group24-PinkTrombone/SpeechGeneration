@@ -18,6 +18,11 @@ def test_Prior():
         def forward(self, hidden: Tensor) -> Normal:
             return Normal(hidden, hidden.abs())
 
+        @property
+        def state_shape(self) -> tuple[int]:
+            return (10,)
+
     dummy = torch.randn(10)
     c = C()
     c.forward(dummy)
+    c.state_shape

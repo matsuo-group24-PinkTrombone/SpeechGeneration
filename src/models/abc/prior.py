@@ -26,3 +26,11 @@ class Prior(nn.Module, ABC):
                 Type is `Distribution` class for computing kl divergence.
         """
         pass
+
+    @property
+    @abstractmethod
+    def state_shape(self) -> tuple[int]:
+        """Returns world 'state' shape.
+
+        Do not contain batch dim.
+        """
