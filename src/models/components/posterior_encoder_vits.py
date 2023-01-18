@@ -4,9 +4,9 @@ from typing import Optional, Tuple
 
 import torch
 
+from ...utils.nets_utils import make_non_pad_mask
 from .wavenet import WaveNet
 from .wavenet.residual_block import Conv1d
-from ...utils.nets_utils import make_non_pad_mask
 
 
 class PosteriorEncoderVITS(torch.nn.Module):

@@ -1,8 +1,9 @@
 import numpy as np
 import torch
 
-from src.models.components.posterior_encoder import PosteriorEncoderVITS
+from src.models.components.posterior_encoder_vits import PosteriorEncoderVITS
 from tests.helpers.feats_extract.log_mel_fbank import LogMelFbank
+
 
 def test_posterior_encoder():
     # train_config
@@ -67,7 +68,7 @@ def test_posterior_encoder():
     # ログメルスペクトログラムに変換
     feats, _ = feats_extractor(batch)
     feats = torch.transpose(feats, 1, 2)
-    assert feats.size() == torch.Size([1,80,5])
+    assert feats.size() == torch.Size([1, 80, 5])
 
     # featsの長さは仮に5で固定
     feats_lengths = torch.tensor([5] * batch_size)
@@ -77,14 +78,14 @@ def test_posterior_encoder():
 
     z, m_q, logs_q, y_mask = posterior_encoder(feats, feats_lengths, g=g)
 
-    assert z.size() == torch.Size([1,192,5])
-    assert m_q.size() == torch.Size([1,192,5])
-    assert logs_q.size() == torch.Size([1,192,5])
+    assert z.size() == torch.Size([1, 192, 5])
+    assert m_q.size() == torch.Size([1, 192, 5])
+    assert logs_q.size() == torch.Size([1, 192, 5])
 
     # 時間軸をlinearで統合する場合
-    l1 = torch.nn.Linear(5,1)
+    l1 = torch.nn.Linear(5, 1)
     z_ = l1(z)
-    assert z_.size() == torch.Size([1,192,1])
+    assert z_.size() == torch.Size([1, 192, 1])
 
     print(f"z:{z}")
     print(f"m_q:{m_q}")
