@@ -13,6 +13,7 @@ class ReplayBuffer:
         self.spaces = spaces
         self.buffer_size = buffer_size
         self.current_index = 0
+        self.is_capacity_reached = False
         self.memory = self.init_values()
 
     def push(self, examples: Dict[str, np.ndarray]):
@@ -22,6 +23,9 @@ class ReplayBuffer:
 
         for space_name, value in examples.items():
             self.memory[space_name][self.current_index] = value
+        
+        if not self.is_capacity_reached:
+            self.is_capacity_reached = (self.current_index + 1) >= (self.buffer_size)
         self.current_index = (self.current_index + 1) % self.buffer_size
 
     def sample(
@@ -45,7 +49,10 @@ class ReplayBuffer:
         return sampled_data
 
     def __len__(self):
-        return self.current_index + 1
+        if self.is_capacity_reached:
+            return self.buffer_size
+        else:
+            return self.current_index
 
     def init_values(self):
         initialized_memory = {}
