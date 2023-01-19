@@ -16,6 +16,14 @@ class ReplayBuffer:
         self.memory = self.init_values()
 
     def push(self, examples: Dict[str, np.ndarray]):
+        """You can push your data to ReplayBuffer with this method
+
+        Args:
+            examples (Dict[str, np.ndarray]): data to push 
+
+        Raises:
+            RuntimeError: This occurs when you input invalid space name which is not entered to __init__
+        """
         invalid_space_names = set(examples.keys()).difference(self.spaces.keys())
         if not invalid_space_names == set():
             raise RuntimeError(f"space names {invalid_space_names} are invalid space names")
@@ -30,6 +38,16 @@ class ReplayBuffer:
     def sample(
         self, batch_size: int, chunk_length: int, chunk_first: bool = True
     ) -> Dict[str, np.ndarray]:
+        """This method takes mini-batch from ReplayBuffer.
+
+        Args:
+            batch_size (int): The size of mini-batch.
+            chunk_length (int): The time length of taken data.
+            chunk_first (bool, optional): If True, returned sample's shape is (chunk_length, batch_size, *). Defaults to True.
+
+        Returns:
+            Dict[str, np.ndarray]: Mini-batch from ReplayBuffer.
+        """
         minibatch = {space_name: [] for space_name in self.spaces.keys()}
         for _ in range(batch_size):
             data = self.sample_chunk(chunk_length)
@@ -47,6 +65,14 @@ class ReplayBuffer:
         self,
         chunk_length: int,
     ) -> Dict[str, np.ndarray]:
+        """This method takes one sample from ReplayBuffer.
+
+        Args:
+            chunk_length (int): The time length of taken data.
+
+        Returns:
+            Dict[str, np.ndarray]: One sample from ReplayBuffer.
+        """
         # TODO:self.current_indexを考慮した実装
         if self.is_capacity_reached:
             max_index = self.buffer_size
