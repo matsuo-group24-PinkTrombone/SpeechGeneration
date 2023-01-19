@@ -21,8 +21,8 @@ def test_Controller():
             target: Tensor,
             controller_hidden: Tensor,
             probabilistic: bool,
-        ) -> Tensor:
-            return torch.randn(10)
+        ) -> tuple[Tensor, Tensor]:
+            return torch.randn(10), torch.randn(10)
 
     dummy = torch.randn(10)
     c = C()
