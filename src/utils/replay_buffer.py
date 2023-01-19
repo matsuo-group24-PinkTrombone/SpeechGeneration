@@ -13,7 +13,7 @@ class ReplayBuffer:
         self.buffer_size = buffer_size
         self.current_index = 0
         self.is_capacity_reached = False
-        self.memory = self.init_values()
+        self.memory = self.init_memory()
 
     def push(self, examples: Dict[str, np.ndarray]):
         """You can push your data to ReplayBuffer with this method
@@ -89,7 +89,7 @@ class ReplayBuffer:
         else:
             return self.current_index
 
-    def init_values(self):
+    def init_memory(self):
         initialized_memory = {}
         for space_name, box in self.spaces.items():
             shape = (self.buffer_size,) + box.shape
