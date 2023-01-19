@@ -9,9 +9,9 @@ class Controller(nn.Module, ABC):
     r"""Abstract controller model class.
 
     This model gets `hidden`, `state`, `target` and `controller_hidden`,
-    after returns `action` in :meth:`forward`.
+    after returns `action` and `controller_hidden` in :meth:`forward`.
 
-        i.e. a_t ~ C(a_t | h_t, s_t, \tau_t, hc_t})
+        i.e. C(a_t | h_t, s_t, \tau_t, hc_t}) -> a_t, hc_{t+1}
 
     Note: action range is must be [-1, 1] for action normalization.
     """
@@ -24,7 +24,7 @@ class Controller(nn.Module, ABC):
         target: _tensor_or_any,
         controller_hidden: _tensor_or_any,
         probabilistic: bool,
-    ) -> _tensor_or_any:
+    ) -> tuple[_tensor_or_any, _tensor_or_any]:
         r"""Take action. If `probabilistic` is True, sampling from normal distribution.
 
         Args:
@@ -35,5 +35,6 @@ class Controller(nn.Module, ABC):
             probabilistic (bool): If True, sample action from normal distribution.
         Returns:
             action (_tensor_or_any): action data `a_t`. The value range must be [-1, 1].
+            next_controller_hidden (_tensor_or_any): Next controller hidden state `hc_{t+1}`.
         """
         pass
