@@ -65,6 +65,8 @@ make docker-run
 2. Dev Containersタブの中にある`speech-generation:latest`を選択し、`Open Folder in container`をクリックして接続。
 3. `/workspace`をVSCodeで開いて作業を開始する。
 
+Note: もう一度作業を開始する時も以上に述べた手順で再開することができます。
+
 ### Pythonの依存関係をインストール
 
 プロジェクトのPythonの依存関係はよく変化します。したがってPythonの依存関係はDocker Imageと分離しており、別途インストールする必要があります。
