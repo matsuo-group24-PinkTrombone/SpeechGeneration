@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from gym.spaces import Box
 
-from src.utils.replay_buffer import ReplayBuffer
+from src.datamodules.replay_buffer import ReplayBuffer
 
 spaces = {
     "space1": Box(-1, 1, (3,)),
@@ -10,6 +10,7 @@ spaces = {
     "space3": Box(-1, np.inf, (3,)),
     "space4": Box(-np.inf, np.inf, (3,)),
     "space5": Box(0, 1, (1,), dtype=bool),
+    "space6": Box(-np.inf, np.inf, (3, 4, 5))
 }
 valid_buffer_size = 30000
 invalid_buffer_size = -1
@@ -40,7 +41,17 @@ def test_push():
 
 
 def test_sample_chunk():
-    pass
+    chunk_length = 4
+    num_adds = 64
+
+    rb = ReplayBuffer(spaces, valid_buffer_size)
+    for _ in range(num_adds):
+        random_input = {space_name: box.sample() for space_name, box in spaces.items()}
+        rb.push(random_input)
+
+    sample = rb.sample_chunk(chunk_length)
+    for space_name, box in spaces.items():
+        assert sample[space_name].shape == (chunk_length, *box.shape)
 
 
 def test_sample():
@@ -69,7 +80,7 @@ def test__len__():
         random_input = {space_name: box.sample() for space_name, box in spaces.items()}
         rb.push(random_input)
     # Before rb.current_index reached to buffer_size,
-    # len(rb) should be equeal to self.current_index
+    # len(rb) should be equal to self.current_index
     assert len(rb) == buffer_size - 1
 
     # Once rb.current_index reached to buffer_size,
