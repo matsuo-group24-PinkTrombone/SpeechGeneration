@@ -28,12 +28,10 @@ train: ## Train the model
 	python src/train.py
 
 docker-build: ## Building Docker Image
-	sudo docker build . -t speech-generation:latest --no-cache
+	docker build . -t speech-generation:latest --no-cache
 
 docker-run:
-	sudo docker run -it \
+	docker run -it \
         --gpus all \
-        --mount type=bind,source=$(shell pwd),target=/workspace \
-		-e LOCAL_UID=$(shell id -u $(USER)) \
-		-e LOCAL_GID=$(shell id -g $(USER)) \
+        --mount type=volume,source=speech-generation,target=/workspace \
         speech-generation:latest
