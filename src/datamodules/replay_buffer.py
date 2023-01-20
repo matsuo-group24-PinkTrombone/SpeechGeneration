@@ -16,10 +16,10 @@ class ReplayBuffer:
         self.memory = self.init_memory()
 
     def push(self, examples: Dict[str, np.ndarray]):
-        """You can push your data to ReplayBuffer with this method
+        """You can push your data to ReplayBuffer with this method.
 
         Args:
-            examples (Dict[str, np.ndarray]): data to push 
+            examples (Dict[str, np.ndarray]): data to push
 
         Raises:
             RuntimeError: This occurs when you input invalid space name which is not entered to __init__
@@ -57,7 +57,7 @@ class ReplayBuffer:
         for space_name, value in minibatch.items():
             data_np = np.stack(minibatch[space_name])
             if chunk_first:
-                data_np = data_np.transpose(1, 0, 2)
+                data_np = data_np.swapaxes(1, 0)
             minibatch[space_name] = data_np
         return minibatch
 
@@ -72,14 +72,20 @@ class ReplayBuffer:
 
         Returns:
             Dict[str, np.ndarray]: One sample from ReplayBuffer.
+
+        Raises:
+            AssertionError: This occurs when chunk_length is greater than len(self)
         """
-        # TODO:self.current_indexを考慮した実装
+        assert chunk_length <= len(
+            self
+        ), f"chunk_length(=={chunk_length}) must be less than or equal to the current number of data(== {len(self)}"
+        max_start_index = len(self) - chunk_length
+        start_index = np.random.randint(0, max_start_index)
+        sampled_indice = np.arange(start_index, start_index + chunk_length)
+
         if self.is_capacity_reached:
-            max_index = self.buffer_size
-        else:
-            max_index = self.current_index
-        start_index = np.random.randint(0, max_index)
-        sampled_indice = np.arange(chunk_length) + start_index
+            sampled_indice = (self.current_index + sampled_indice) % self.buffer_size
+
         sampled_data = {key: value[sampled_indice] for key, value in self.memory.items()}
         return sampled_data
 
@@ -93,5 +99,5 @@ class ReplayBuffer:
         initialized_memory = {}
         for space_name, box in self.spaces.items():
             shape = (self.buffer_size,) + box.shape
-            initialized_memory[space_name] = np.empty(shape)
+            initialized_memory[space_name] = np.empty(shape, dtype=box.dtype)
         return initialized_memory
