@@ -57,7 +57,7 @@ make docker-run
 
 ### VSCode からDockerイメージ内で作業する
 
-[VisualStudioCodeのRemote Developmentエクステンション](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack)を使用するこで起動しているDockerイメージ内で直接作業することができるようになります。
+[VisualStudioCodeのRemote Developmentエクステンション](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack)を使用することで、起動しているDockerイメージ内で直接作業することができるようになります。
 
 次の手順を経ることで起動中のDockerイメージ内部に入ることが出来ます。
 
