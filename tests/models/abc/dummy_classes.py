@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 from torch.distributions import Normal
 
+from src.models.abc.agent import Agent
 from src.models.abc.controller import Controller
 from src.models.abc.observation_auto_encoder import (
     ObservationDecoder,
@@ -11,6 +12,7 @@ from src.models.abc.observation_auto_encoder import (
 )
 from src.models.abc.prior import Prior
 from src.models.abc.transition import Transition
+from src.models.abc.world import World
 
 
 class DummyTransition(Transition):
@@ -121,3 +123,17 @@ class DummyController(Controller):
     @property
     def controller_hidden_shape(self) -> tuple[int]:
         return self._controller_hidden_shape
+
+
+class DummyWorld(World):
+    """Dummy world model interface class for testing."""
+
+    pass
+
+
+class DummyAgent(Agent):
+    """Dummy agent model interface class for testing."""
+
+    def explore(self, obs: tuple[Tensor, Tensor], target: Tensor) -> Tensor:
+        action = self.act(obs, target, True)
+        return action
