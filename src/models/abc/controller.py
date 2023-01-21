@@ -38,3 +38,11 @@ class Controller(nn.Module, ABC):
             next_controller_hidden (_tensor_or_any): Next controller hidden state `hc_{t+1}`.
         """
         pass
+
+    @property
+    def controller_hidden_shape(self) -> tuple[int]:
+        """Returns controller hidden state shape.
+
+        Do not contain batch dim.
+        """
+        pass

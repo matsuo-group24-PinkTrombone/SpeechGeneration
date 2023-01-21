@@ -24,6 +24,11 @@ def test_Controller():
         ) -> tuple[Tensor, Tensor]:
             return torch.randn(10), torch.randn(10)
 
+        @property
+        def controller_hidden_shape(self) -> tuple[int]:
+            return (10,)
+
     dummy = torch.randn(10)
     c = C()
     c.forward(dummy, dummy, dummy, dummy, True)
+    c.controller_hidden_shape
