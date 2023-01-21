@@ -10,7 +10,7 @@ spaces = {
     "space3": Box(-1, np.inf, (3,)),
     "space4": Box(-np.inf, np.inf, (3,)),
     "space5": Box(0, 1, (1,), dtype=bool),
-    "space6": Box(-np.inf, np.inf, (3, 4, 5))
+    "space6": Box(-np.inf, np.inf, (3, 4, 5)),
 }
 valid_buffer_size = 30000
 invalid_buffer_size = -1
