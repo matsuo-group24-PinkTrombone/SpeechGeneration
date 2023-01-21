@@ -15,8 +15,10 @@ wget https://raw.githubusercontent.com/matsuo-group24-PinkTrombone/SpeechGenerat
 
 [公式のインストール方法に従ってセットアップしてください](https://docs.docker.com/get-docker/)
 
-- Ubuntuの場合
-  Ubuntuの場合はDockerの公式から便利なセットアップスクリプトが提供されています。
+Note: Windows上では**wsl上ではなく**Docker Desktopを直接インストールすることを推奨します。
+
+- Ubuntuの場合:
+  Dockerの公式から便利なセットアップスクリプトが提供されています。
 
   ```sh
   curl https://get.docker.com | sh \
@@ -27,48 +29,43 @@ wget https://raw.githubusercontent.com/matsuo-group24-PinkTrombone/SpeechGenerat
 
   また、GPUを使うために NVIDIA Container Toolkitをインストールします。[インストール方法はNVIDIAのドキュメントを参照願います。](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit)
 
-## Preparation for Experiment.
+## Preparation for Experiment
 
-### Pull and Run Docker Image
+### Prerequiements
 
-プロジェクトをクローンし、Dockerのイメージを実行します。
+- make
+- git
+
+### Build and Run Docker Image
+
+プロジェクトをクローンし、Dockerのイメージをビルドして実行します。
 
 ```sh
 git clone https://github.com/matsuo-group24-PinkTrombone/SpeechGeneration.git
 ```
 
 ```sh
-sudo docker run -it \
-    --gpus all \
-    --mount type=bind,source="$(pwd)/SpeechGeneration",target=/workspace \
-		-e LOCAL_UID=$(id -u $USER) \
-		-e LOCAL_GID=$(id -g $USER) \
-    gesonanko/speech-generation:latest
+make docker-build
+make docker-run
 ```
 
 - output
 
   ```sh
-  user@90a59619c31f:/workspace$
+  root@90a59619c31f:/workspace$
   ```
 
-- Note: Dockerfileからローカルでビルドし、そのイメージを使用する事も出来ます。
+### VSCode からDockerイメージ内で作業する
 
-  ```sh
-  # in SpeeechGeneration project dir
-  make docker-build
-  make docker-run
-  ```
+[VisualStudioCodeのRemote Developmentエクステンション](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack)を使用することで、起動しているDockerイメージ内で直接作業することができるようになります。
 
-  or
+次の手順を経ることで起動中のDockerイメージ内部に入ることが出来ます。
 
-  ```sh
-  # in SpeeechGeneration project dir
-  sudo docker build . -t speech-generation:latest
-  sudo docker run --args ...
-  ```
+1. VS Codeの左側のアイコン「リモートエクスプローラー」を開く
+2. Dev Containersタブの中にある`speech-generation:latest`を選択し、`Open Folder in container`をクリックして接続。
+3. `/workspace`をVSCodeで開いて作業を開始する。
 
-- **Note: Docker Imageのルートパスワードは[Dockerfile](/Dockerfile)内の`RUN echo 'root:<pass>' | chpasswd` を参照してください。**
+Note: もう一度作業を開始する時も以上に述べた手順で再開することができます。
 
 ### Pythonの依存関係をインストール
 

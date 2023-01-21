@@ -1,12 +1,10 @@
 FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime
 
-RUN echo 'root:pass' | chpasswd
 ADD ./ /workspace
 
 RUN apt-get update && apt-get install -y \
   ffmpeg \
   git \
-  gosu \
   make \
   && rm -rf /var/lib/apt/lists/*
 
