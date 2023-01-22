@@ -28,5 +28,6 @@ class Prior(prior.Prior):
         )  # Follows the code of exercise7
         return Normal(mean, stddev)
 
+    @property
     def state_shape(self) -> tuple[int]:
         return (self.state_dim,)
