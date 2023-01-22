@@ -24,7 +24,6 @@ class Agent(ABC):
         Args:
             controller (Controller): Instance of Controller model class.
             transition (Transition): Instance of Transition model class.
-            prior (Prior): Instance of Prior model class.
             obs_encoder (ObservationEncoder): Instance of Observation Encoder model class.
         """
 
@@ -48,6 +47,7 @@ class Agent(ABC):
         Args:
             obs (_tensor_or_any): Observation from environment.
             target (_tensor_or_any): Target sound data from environment.
+            probabilistic (bool): If True, generate action from probability distribution.
 
         Returns:
             action (_tensor_or_any): Action for stepping environment.
