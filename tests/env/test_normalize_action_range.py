@@ -4,13 +4,13 @@ from gym.spaces import Box
 from pynktrombonegym.env import PynkTrombone
 
 from src.env import normalize_action_range as mod
-from tests.helpers.paths import sample_target_sound_file_pathes
+from tests.helpers.paths import sample_target_sound_file_paths
 
 cls = mod.NormalizeActionRange
 
 
 def test__init__():
-    base_env = PynkTrombone(sample_target_sound_file_pathes)
+    base_env = PynkTrombone(sample_target_sound_file_paths)
     low, high = -10.0, 10.0
     env = cls(base_env, low, high)
 
@@ -30,7 +30,7 @@ def test__init__():
 
 @pytest.mark.parametrize("action_value", [-1.0, 0.0, 1.0])
 def test_inv_normalized_action_range(action_value: float):
-    base_env = PynkTrombone(sample_target_sound_file_pathes)
+    base_env = PynkTrombone(sample_target_sound_file_paths)
     low, high = -1.0, 1.0
     env = cls(base_env, low, high)
 
@@ -56,7 +56,7 @@ def test_inv_normalized_action_range(action_value: float):
 
 
 def test_step_action():
-    base_env = PynkTrombone(sample_target_sound_file_pathes)
+    base_env = PynkTrombone(sample_target_sound_file_paths)
     low, high = -1.0, 1.0
     env = cls(base_env, low, high)
 
