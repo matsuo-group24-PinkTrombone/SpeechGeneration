@@ -15,6 +15,8 @@ class NormalizeActionRange(gym.ActionWrapper):
         """
         Args:
             env (gym.Env): PynkTromboneGym Env or its wrapper.
+            low (float): The lowest value of normalized action.
+            high (float): The highest value of normalized action.
         """
         super().__init__(env)
         self.low = low
