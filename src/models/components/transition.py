@@ -14,6 +14,14 @@ class Transition(AbstractTransition):
         input_size: int,
         bias: bool = True,
     ):
+        """
+        Args:
+            hidden_size (int): The size of hidden state(h_t) of RNN
+            state_size (int): The size of state(s_t)
+            action_size (int): The size of action(a_t)
+            input_size (int): The size of vector input to RNN
+            bias (bool, optional): This argment determines whether RNN requires bias or not. Defaults to True.
+        """
         super().__init__()
         self.rnn = nn.GRUCell(
             input_size=input_size,
@@ -23,6 +31,16 @@ class Transition(AbstractTransition):
         self.fc_action_state = nn.Linear(state_size + action_size, input_size)
 
     def forward(self, hidden: _toa, state: _toa, action: _toa) -> torch.Tensor:
+        """Method for computing f(h_t, s_t, a_t) -> h_t+1.
+
+        Args:
+            hidden (_toa): hidden state of RNN(h_t)
+            state (_toa): state of Observation (s_t)
+            action (_toa): action (a_t)
+
+        Returns:
+            torch.Tensor: next hidden state of RNN(h_t+1)
+        """
         rnn_input = self.fc_action_state(torch.cat((state, action), dim=-1))
         print(rnn_input.shape)
         print(hidden.shape)
