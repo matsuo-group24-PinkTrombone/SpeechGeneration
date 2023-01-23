@@ -47,8 +47,6 @@ class Transition(AbstractTransition):
             torch.Tensor: next hidden state of RNN(h_t+1)
         """
         rnn_input = self.fc_action_state(torch.cat((state, action), dim=-1))
-        print(rnn_input.shape)
-        print(hidden.shape)
         next_hidden = self.rnn(rnn_input, hidden)
         return next_hidden
 
