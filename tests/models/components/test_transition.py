@@ -1,5 +1,5 @@
 import torch
-from src.models.components.transition import TransitionModel
+from src.models.components.transition import Transition
 
 hidden_size = 10
 action_size = 8
@@ -7,7 +7,7 @@ state_size = 8
 input_size = 8
 batch_size = 4
 def test_forward():
-    model = TransitionModel(hidden_size, state_size, action_size, input_size)
+    model = Transition(hidden_size, state_size, action_size, input_size)
 
     # single input
     random_state = torch.rand((state_size))

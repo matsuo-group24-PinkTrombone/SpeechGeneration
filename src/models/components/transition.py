@@ -1,9 +1,9 @@
 import torch
 from torch import nn
-from src.models.abc.transition import Transition
+from src.models.abc.transition import Transition as AbstractTransition
 from src.models.abc._types import _tensor_or_any as _toa
 
-class TransitionModel(Transition):
+class Transition(AbstractTransition):
     def __init__(
         self,
         hidden_size: int,
