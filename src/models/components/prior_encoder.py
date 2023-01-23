@@ -4,11 +4,11 @@ import torch.nn.functional as F
 from torch.distributions import Distribution
 from torch.distributions.normal import Normal
 
-from ..abc.prior import Prior
+from ..abc.prior import Prior as AbstractPrior
 from ..abc._types import _t_or_any, _tensor_or_any
 
 
-class Prior(Prior):
+class Prior(AbstractPrior):
     def __init__(self, hidden_dim: int, state_dim: int, min_stddev: float = 0.1) -> None:
         """
         Args:
