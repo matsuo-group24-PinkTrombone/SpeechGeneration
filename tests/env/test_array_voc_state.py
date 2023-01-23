@@ -13,7 +13,7 @@ array_order = mod.ARRAY_ORDER
 sample_target_sound_file_paths = glob.glob("data/sample_target_sounds/*")
 
 
-def test_ArrayVocStateSpaceNames():
+def test_name_cls():
     assert name_cls.VOC_STATE == "voc_state"
 
 
