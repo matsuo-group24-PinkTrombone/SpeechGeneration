@@ -1,5 +1,4 @@
 import torch
-
 from src.models.components.transition import Transition
 
 hidden_size = 10
