@@ -45,7 +45,7 @@ class World:
         next_obs: _tensor_or_any,
         *args: Any,
         **kwds: Any,
-    ) -> tuple[_dist_or_any, _dist_or_any, _tensor_or_any]:
+    ) -> tuple[_dist_or_any, _dist_or_any, _tensor_or_any, _tensor_or_any]:
         """Make world model transition.
 
         Args:
@@ -65,3 +65,17 @@ class World:
         next_state_posterior = self.obs_encoder.forward(next_hidden, next_obs)
 
         return next_state_prior, next_state_posterior, next_hidden
+
+    def eval(self):
+        """Set models to evaluation mode."""
+        self.transition.eval()
+        self.prior.eval()
+        self.obs_encoder.eval()
+        self.obs_decoder.eval()
+
+    def train(self):
+        """Set models to training mode."""
+        self.transition.train()
+        self.prior.train()
+        self.obs_encoder.train()
+        self.obs_decoder.train()
