@@ -4,6 +4,7 @@ import torch
 from src.models.components.controller import Controller
 from src.models.components.posterior_encoder_vits import PosteriorEncoderVITS
 
+
 @pytest.mark.parametrize(
     """
     batch_size,
@@ -32,9 +33,7 @@ def test_controller(
 ):
     # define encoder_modules
     pos_enc_vits = PosteriorEncoderVITS(
-        in_channels=target_mel_channels,
-        hidden_channels=state_dim,
-        out_channels=state_dim
+        in_channels=target_mel_channels, hidden_channels=state_dim, out_channels=state_dim
     )
     encoder_modules = pos_enc_vits.get_encoder_modules()
 
@@ -51,9 +50,9 @@ def test_controller(
 
     # create random tensor
     hidden = torch.randn(batch_size, hidden_dim)
-    state = torch.randn(batch_size, state_dim,feats_T)
-    target = torch.randn(batch_size, target_mel_channels,feats_T)
-    assert target.transpose(1,2).size() == torch.Size([batch_size,feats_T,target_mel_channels])
+    state = torch.randn(batch_size, state_dim, feats_T)
+    target = torch.randn(batch_size, target_mel_channels, feats_T)
+    assert target.transpose(1, 2).size() == torch.Size([batch_size, feats_T, target_mel_channels])
     c_hidden = torch.randn(batch_size, c_hidden_dim)
 
     action, next_controller_hidden = controller(hidden, state, target, c_hidden, prob)

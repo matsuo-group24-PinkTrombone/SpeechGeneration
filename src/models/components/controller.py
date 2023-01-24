@@ -1,11 +1,13 @@
-import torch
-from torch import Tensor
 from typing import Tuple
 
-from ..abc.controller import Controller as AbsController
+import torch
+from torch import Tensor
+
 from ...utils.nets_utils import make_non_pad_mask
+from ..abc.controller import Controller as AbsController
 from .wavenet import WaveNet
 from .wavenet.residual_block import Conv1d
+
 
 class Controller(AbsController):
     def __init__(
@@ -31,19 +33,17 @@ class Controller(AbsController):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.state_dim = state_dim
-        self.input_conv,self.encoder,self.encoder_proj = encoder_modules
+        self.input_conv, self.encoder, self.encoder_proj = encoder_modules
         self.c_hidden_dim = c_hidden_dim
         self.action_dim = action_dim
 
-        self.state_emb = torch.nn.Linear(feats_T,1)
+        self.state_emb = torch.nn.Linear(feats_T, 1)
         self.rnn = torch.nn.GRUCell(
             input_size=hidden_dim + state_dim * 2,
             hidden_size=c_hidden_dim,
             bias=bias,
         )
-        self.proj = torch.nn.Sequential(
-            torch.nn.Linear(c_hidden_dim, action_dim), torch.nn.Tanh()
-        )
+        self.proj = torch.nn.Sequential(torch.nn.Linear(c_hidden_dim, action_dim), torch.nn.Tanh())
 
     def forward(
         self,
@@ -63,11 +63,11 @@ class Controller(AbsController):
         """
         # target encoding
         x = self.input_conv(target)
-        x = self.encoder(x, None,g=None)
+        x = self.encoder(x, None, g=None)
         enc_stats = self.encoder_proj(x)
         enc_m, enc_logs = enc_stats.split(enc_stats.size(1) // 2, dim=1)
-        target_state = (enc_m + torch.randn_like(enc_m) * torch.exp(enc_logs))
-        
+        target_state = enc_m + torch.randn_like(enc_m) * torch.exp(enc_logs)
+
         t_state_emb = self.state_emb(target_state).squeeze(2)
 
         # RNN
@@ -80,12 +80,12 @@ class Controller(AbsController):
         # action
         if probabilistic:
             action = torch.clip(
-                torch.normal(mean=0,std=1,size=(hidden.size(0),self.action_dim)),
-                min = -1,
-                max = 1
+                torch.normal(mean=0, std=1, size=(hidden.size(0), self.action_dim)), min=-1, max=1
             )
         else:
-            assert next_controller_hidden.size() == torch.Size([controller_hidden.size(0),self.c_hidden_dim])
+            assert next_controller_hidden.size() == torch.Size(
+                [controller_hidden.size(0), self.c_hidden_dim]
+            )
             action = self.proj(next_controller_hidden)
 
         return action, next_controller_hidden
