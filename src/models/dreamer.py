@@ -26,8 +26,8 @@ class Dreamer(nn.Module):
     """Dreamer model class."""
 
     # Added attribute from Trainer
-    current_step: int
-    current_episode: int
+    current_step: int = 0
+    current_episode: int = 0
     device: torch.device
     dtype: torch.dtype
 
@@ -45,6 +45,8 @@ class Dreamer(nn.Module):
         free_nats: float = 3.0,
         num_collect_experience_steps: int = 100,
         imagination_horizon: int = 32,
+        evaluation_steps: int = 44 * 60,
+        evaluation_blank_length: int = 22050,
     ) -> None:
         """
         Args:
@@ -59,6 +61,7 @@ class Dreamer(nn.Module):
             controller_optimizer (partial[Optimizer]): Partial instance of Optimizer class.
 
             free_nats (float): Ignore kl div loss when it is less then this value.
+            evaluation_blank_length (int):
         """
 
         self.transition = transition
@@ -83,6 +86,8 @@ class Dreamer(nn.Module):
         self.free_nats = free_nats
         self.num_collect_experience_steps = num_collect_experience_steps
         self.imagination_horizon = imagination_horizon
+        self.evaluation_steps = evaluation_steps
+        self.evaluation_blank_length = evaluation_blank_length
 
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
@@ -103,6 +108,7 @@ class Dreamer(nn.Module):
 
         return [world_optim, con_optim]
 
+    @torch.no_grad()
     def collect_experiences(self, env: gym.Env, replay_buffer: ReplayBuffer) -> ReplayBuffer:
         """Explorer in env and collect experiences to replay buffer.
 
@@ -114,21 +120,21 @@ class Dreamer(nn.Module):
         Returns:
             replay_buffer(ReplayBuffer): Same pointer of input replay_buffer.
         """
-        device = self.agent.hidden.device
-        dtype = self.agent.hidden.dtype
+        device = self.device
+        dtype = self.dtype
 
         obs = env.reset()
         voc_state_np = obs[ObsNames.VOC_STATE]
         generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
         target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
 
-        voc_state = torch.as_tensor(voc_state_np, dtype, device).squeeze(0)
-        generated = torch.as_tensor(generated_np, dtype, device).squeeze(0)
-        target = torch.as_tensor(target_np, dtype, device).squeeze(0)
+        voc_state = torch.as_tensor(voc_state_np, dtype, device).unsqueeze(0)
+        generated = torch.as_tensor(generated_np, dtype, device).unsqueeze(0)
+        target = torch.as_tensor(target_np, dtype, device).unsqueeze(0)
 
         for _ in range(self.num_collect_experience_steps):
             action = self.agent.explore(obs=(voc_state, generated), target=target)
-            action = action.cpu().unsqueeze(0).numpy()
+            action = action.cpu().squeeze(0).numpy()
             obs, _, done, _ = env.step(action)
 
             voc_state_np = obs[ObsNames.VOC_STATE]
@@ -171,6 +177,8 @@ class Dreamer(nn.Module):
         device = self.agent.hidden.device
         dtype = self.agent.hidden.dtype
 
+        self.world.train()
+
         actions = experiences[buffer_names.ACTION]
         voc_states = experiences[buffer_names.VOC_STATE]
         generated_sounds = experiences[buffer_names.GENERATED_SOUND]
@@ -197,15 +205,15 @@ class Dreamer(nn.Module):
             gened_sound = torch.as_tensor(generated_sounds[idx], dtype, device)
             next_obs = (voc_stat, gened_sound)
 
-            next_hidden = self.transition.forward(hidden, state, action)
-            next_state_prior = self.prior.forward(next_hidden)
-            next_state_posterior = self.obs_encoder.forward(next_hidden, next_obs)
+            next_state_prior, next_state_posterior, next_hidden = self.world.forward(
+                hidden, state, action, next_obs
+            )
+
             next_state = next_state_posterior.rsample()
+            rec_voc_stat, rec_gened_sound = self.obs_decoder.forward(next_hidden, next_state)
 
             all_states[idx] = next_state.detach()
             all_hiddens[idx] = next_hidden.detach()
-
-            rec_voc_stat, rec_gened_sound = self.obs_decoder.forward(next_hidden, next_state)
 
             # compute losses
             kl_div_loss = kl_divergence(next_state_posterior, next_state_prior).view(
@@ -256,17 +264,126 @@ class Dreamer(nn.Module):
             experiences (dict[str, np.ndarray]): Collected experiences (No modification.)
         """
 
+        self.controller.train()
+        self.world.eval()
+
         device = self.device
         dtype = self.dtype
 
         actions = experiences[buffer_names.ACTION]
-        voc_states = experiences[buffer_names.VOC_STATE]
-        generated_sounds = experiences[buffer_names.GENERATED_SOUND]
         dones = experiences[buffer_names.DONE]
         target_sounds = experiences[buffer_names.TARGET_SOUND]
         old_hiddens = experiences["hiddens"]
-        old_states = experiences["states"]
 
         chunk_size, batch_size = actions.shape[:2]
 
-        start_idx = np.random.randint(0, chunk_size - self.imagination_horizon, (chunk_size,))
+        start_indices = np.random.randint(0, chunk_size - self.imagination_horizon, (batch_size,))
+        batch_arange = np.arange(batch_size)
+        hidden = torch.as_tensor(old_hiddens[start_indices, batch_arange], dtype, device)
+        controller_hidden = torch.zeros(
+            batch_size, *self.controller.controller_hidden_shape, dtype=dtype, device=device
+        )
+        state = self.prior.forward(hidden).sample()
+
+        loss = 0.0
+        for i in range(self.imagination_horizon):
+            indices = start_indices + i
+            target = torch.as_tensor(target_sounds[indices, batch_arange], dtype, device)
+            action, controller_hidden = self.controller.forward(
+                hidden, state, target, controller_hidden
+            )
+            next_hidden = self.transition.forward(hidden, state, action)
+            next_state = self.prior.forward(next_hidden).sample()
+            rec_next_obs = self.obs_decoder.forward(next_hidden, next_state)
+            _, rec_gened_sound = rec_next_obs
+
+            loss += F.mse_loss(target, rec_gened_sound)
+
+            hidden = next_hidden
+
+            hidden[dones[indices, batch_arange]] = old_hiddens[indices + 1, batch_arange]
+            state = self.prior.forward(hidden)
+
+        loss /= self.imagination_horizon
+
+        loss_dict = {"loss": loss}
+
+        return loss_dict, experiences
+
+    @torch.no_grad()
+    def evaluation_step(self, env: gym.Env) -> dict[str, Any]:
+        """Evaluation step.
+        Args:
+            env (gym.Env): PynkTrombone environment or its wrapper class.
+
+        Returns:
+            loss_dict (dict[str, Any]): Returned metric values.
+        """
+        self.world.eval()
+        self.controller.eval()
+
+        device = self.device
+        dtype = self.dtype
+
+        self.agent.reset()
+
+        obs = env.reset()
+        voc_state_np = obs[ObsNames.VOC_STATE]
+        generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
+        target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
+
+        voc_state = torch.as_tensor(voc_state_np, dtype, device).unsqueeze(0)
+        generated = torch.as_tensor(generated_np, dtype, device).unsqueeze(0)
+        target = torch.as_tensor(target_np, dtype, device).unsqueeze(0)
+
+        generated_sound_waves = []
+        target_sound_waves = []
+
+        blank = np.zeros(self.evaluation_blank_length)
+
+        target_generated_mse = 0.0
+        target_generated_mae = 0.0
+
+        for i in range(self.evaluation_steps):
+            target_sound_waves.append(obs[ObsNames.TARGET_SOUND_WAVE])
+
+            action = self.agent.act(obs=(voc_state, generated), target=target, probabilistic=False)
+            action = action.cpu().squeeze(0).numpy()
+            obs, _, done, _ = env.step(action)
+
+            generated_sound_waves.append(obs[ObsNames.GENERATED_SOUND_WAVE])
+            generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
+
+            target_generated_mse += np.mean((target_np - generated_np) ** 2)
+            target_generated_mae += np.mean(np.abs(target_np - generated_np))
+
+            if done:
+                obs = env.reset()
+                generated_sound_waves.append(blank)
+                target_sound_waves.append(blank)
+                self.agent.reset()
+
+            voc_state_np = obs[ObsNames.VOC_STATE]
+            generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
+            target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
+
+            voc_state = torch.as_tensor(voc_state_np, dtype, device).unsqueeze(0)
+            generated = torch.as_tensor(generated_np, dtype, device).unsqueeze(0)
+            target = torch.as_tensor(target_np, dtype, device).unsqueeze(0)
+
+        target_generated_mae /= self.evaluation_steps
+        target_generated_mse /= self.evaluation_steps
+
+        generated_sounds_for_log = np.concatenate(generated_sound_waves)
+        target_sounds_for_log = np.concatenate(target_sound_waves)
+
+        # logging to tensorboard
+        generated_sounds_for_log
+        target_sounds_for_log
+
+        loss_dict = {
+            "target_generated_mse": target_generated_mse,
+            "target_generated_mae": target_generated_mae,
+        }
+
+        return loss_dict
