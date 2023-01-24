@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch import Tensor
 
 from src.models.abc._types import _tensor_or_any as _toa
 from src.models.abc.transition import Transition as AbstractTransition
@@ -35,16 +36,16 @@ class Transition(AbstractTransition):
         )
         self.fc_action_state = nn.Linear(self.state_size + self.action_size, self.input_size)
 
-    def forward(self, hidden: _toa, state: _toa, action: _toa) -> torch.Tensor:
+    def forward(self, hidden: Tensor, state: Tensor, action: Tensor) -> Tensor:
         """Method for computing f(h_t, s_t, a_t) -> h_t+1.
 
         Args:
-            hidden (_toa): hidden state of RNN(h_t)
-            state (_toa): state of Observation (s_t)
-            action (_toa): action (a_t)
+            hidden (Tensor): hidden state of RNN(h_t)
+            state (Tensor): state of Observation (s_t)
+            action (Tensor): action (a_t)
 
         Returns:
-            torch.Tensor: next hidden state of RNN(h_t+1)
+            Tensor: next hidden state of RNN(h_t+1)
         """
         rnn_input = self.fc_action_state(torch.cat((state, action), dim=-1))
         next_hidden = self.rnn(rnn_input, hidden)
@@ -54,5 +55,3 @@ class Transition(AbstractTransition):
     def hidden_shape(self) -> tuple[int]:
         return (self.hidden_size,)
 
-    def __call__(self, hidden: _toa, state: _toa, action: _toa) -> torch.Tensor:
-        return self.forward(hidden, state, action)
