@@ -105,3 +105,12 @@ class PosteriorEncoderVITS(torch.nn.Module):
         z = (m + torch.randn_like(m) * torch.exp(logs)) * x_mask
 
         return z, m, logs, x_mask
+
+    def get_encoder_modules(self):
+        """
+        Args:
+        Return:
+            (self.input_conv, self.encoder, self.proj)
+        """
+
+        return (self.input_conv, self.encoder, self.proj)
