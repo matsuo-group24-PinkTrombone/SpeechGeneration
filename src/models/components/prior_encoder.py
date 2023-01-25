@@ -4,17 +4,17 @@ import torch.nn.functional as F
 from torch.distributions import Distribution
 from torch.distributions.normal import Normal
 
-from ..abc.prior import Prior as AbstractPrior
 from ..abc._types import _t_or_any, _tensor_or_any
+from ..abc.prior import Prior as AbstractPrior
 
 
 class Prior(AbstractPrior):
     def __init__(self, hidden_dim: int, state_dim: int, min_stddev: float = 0.1) -> None:
         """
         Args:
-            hidden_dim (int): The length of Hidden dimention
-            state_dim (int): The length of State dimention
-            min_stddev (float, optional): inimum value of standart deviation. Defaults to 0.1.
+            hidden_dim (int): The length of Hidden dimension
+            state_dim (int): The length of State dimension
+            min_stddev (float, optional): inimum value of standard deviation. Defaults to 0.1.
         """
         super().__init__()
         self.hidden_dim = hidden_dim
@@ -33,7 +33,7 @@ class Prior(AbstractPrior):
             hidden (_tensor_or_any): Hidden vectors computed deterministically.
 
         Returns:
-            _t_or_any[Distribution]: The Normal distribution 
+            _t_or_any[Distribution]: The Normal distribution
         """
         mean = self.fc_to_mean(hidden)
         stddev = (
@@ -46,6 +46,6 @@ class Prior(AbstractPrior):
         """The getter of the shape of state.
 
         Returns:
-            tuple[int]: The size of state dimention.
+            tuple[int]: The size of state dimension.
         """
         return (self.state_dim,)

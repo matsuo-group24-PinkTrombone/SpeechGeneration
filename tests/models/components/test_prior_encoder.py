@@ -9,6 +9,7 @@ state_dim = 5
 invalid_state_dim = -1
 batch_size = 4
 
+
 def test__init__():
     with pytest.raises(AssertionError):
         model = Prior(invalid_hidden_dim, state_dim)
