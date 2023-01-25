@@ -12,38 +12,41 @@ from .wavenet.residual_block import Conv1d
 class Controller(AbsController):
     def __init__(
         self,
-        hidden_dim: int,
-        state_dim: int,
+        hidden_size: int,
+        state_size: int,
         encoder_modules: Tuple,
         feats_T: int,
-        c_hidden_dim: int,
-        action_dim: int,
-        bias: bool,
+        c_hidden_size: int,
+        action_size: int,
+        bias: bool = True,
     ):
         """
         Args:
-            hidden_dim (int):
-            state_dim (int):
-            c_hidden_dim (int):
+            hidden_size (int): The size of hidden state(h_t) of RNN
+            state_size (int): The size of state(s_t)
+            encoder_modules (Tuple): posterior_encoder_vitsのencoderモジュールのインスタンス
+            c_hidden_size (int): The size of controller_hidden_state(hc_t) of RNN
+            action_size (int): The size of action(a_t)
+            bias (bool, optional): This argument determines whether RNN requires bias or not. Defaults to True.
         """
 
         # define target melspectrogram encoder
         # define modules
 
         super().__init__()
-        self.hidden_dim = hidden_dim
-        self.state_dim = state_dim
+        self.hidden_size = hidden_size
+        self.state_size = state_size
         self.input_conv, self.encoder, self.encoder_proj = encoder_modules
-        self.c_hidden_dim = c_hidden_dim
-        self.action_dim = action_dim
+        self.c_hidden_size = c_hidden_size
+        self.action_size = action_size
 
         self.state_emb = torch.nn.Linear(feats_T, 1)
         self.rnn = torch.nn.GRUCell(
-            input_size=hidden_dim + state_dim * 2,
-            hidden_size=c_hidden_dim,
+            input_size=hidden_size + state_size * 2,
+            hidden_size=c_hidden_size,
             bias=bias,
         )
-        self.proj = torch.nn.Sequential(torch.nn.Linear(c_hidden_dim, action_dim), torch.nn.Tanh())
+        self.proj = torch.nn.Sequential(torch.nn.Linear(c_hidden_size, action_size), torch.nn.Tanh())
 
     def forward(
         self,
@@ -55,10 +58,10 @@ class Controller(AbsController):
     ):
         """
         Args:
-            hidden (Tensor):[B,hidden_dim]
-            state (Tensor):[B,state_dim]
+            hidden (Tensor):[B,hidden_size]
+            state (Tensor):[B,state_size]
             target (Tensor):melspectrogram [B,in_channels, T_feats]
-            cotroller_hidden (Tensor):[B,c_hidden_dim]
+            cotroller_hidden (Tensor):[B,c_hidden_size]
             probabilistic (bool):  If True, sample action from normal distribution.
         """
         # target encoding
@@ -68,23 +71,23 @@ class Controller(AbsController):
         enc_m, enc_logs = enc_stats.split(enc_stats.size(1) // 2, dim=1)
         target_state = enc_m + torch.randn_like(enc_m) * torch.exp(enc_logs)
 
-        t_state_emb = self.state_emb(target_state).squeeze(2)
+        embed_target_state = self.state_emb(target_state).squeeze(2)
 
         # RNN
-        state_emb = self.state_emb(state).squeeze(2)
-        hidden_state = torch.cat((hidden, state_emb), dim=1)
-        hidden_state_target = torch.cat((hidden_state, t_state_emb), dim=1)
+        embed_state = self.state_emb(state).squeeze(2)
+        hidden_state = torch.cat((hidden, embed_state), dim=1)
+        hidden_state_target = torch.cat((hidden_state, embed_target_state), dim=1)
 
         next_controller_hidden = self.rnn(hidden_state_target, controller_hidden)
 
         # action
         if probabilistic:
             action = torch.clip(
-                torch.normal(mean=0, std=1, size=(hidden.size(0), self.action_dim)), min=-1, max=1
+                torch.normal(mean=0, std=1, size=(hidden.size(0), self.action_size)), min=-1, max=1
             )
         else:
             assert next_controller_hidden.size() == torch.Size(
-                [controller_hidden.size(0), self.c_hidden_dim]
+                [controller_hidden.size(0), self.c_hidden_size]
             )
             action = self.proj(next_controller_hidden)
 
@@ -92,4 +95,4 @@ class Controller(AbsController):
 
     @property
     def controller_hidden_shape(self):
-        return self.c_hidden_dim
+        return self.c_hidden_size

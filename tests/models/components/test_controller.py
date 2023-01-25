@@ -8,12 +8,12 @@ from src.models.components.posterior_encoder_vits import PosteriorEncoderVITS
 @pytest.mark.parametrize(
     """
     batch_size,
-    hidden_dim,
-    state_dim,
+    hidden_size,
+    state_size,
     target_mel_channels,
     feats_T,
-    c_hidden_dim,
-    action_dim,
+    c_hidden_size,
+    action_size,
     prob
     """,
     [
@@ -23,39 +23,39 @@ from src.models.components.posterior_encoder_vits import PosteriorEncoderVITS
 )
 def test_controller(
     batch_size: int,
-    hidden_dim: int,
-    state_dim: int,
+    hidden_size: int,
+    state_size: int,
     target_mel_channels: int,
     feats_T: int,
-    c_hidden_dim: int,
-    action_dim: int,
+    c_hidden_size: int,
+    action_size: int,
     prob: bool,
 ):
     # define encoder_modules
     pos_enc_vits = PosteriorEncoderVITS(
-        in_channels=target_mel_channels, hidden_channels=state_dim, out_channels=state_dim
+        in_channels=target_mel_channels, hidden_channels=state_size, out_channels=state_size
     )
     encoder_modules = pos_enc_vits.get_encoder_modules()
 
     # controller instanse
     controller = Controller(
-        hidden_dim=hidden_dim,
-        state_dim=state_dim,
+        hidden_size=hidden_size,
+        state_size=state_size,
         encoder_modules=encoder_modules,
         feats_T=feats_T,
-        c_hidden_dim=c_hidden_dim,
-        action_dim=action_dim,
+        c_hidden_size=c_hidden_size,
+        action_size=action_size,
         bias=True,
     )
 
     # create random tensor
-    hidden = torch.randn(batch_size, hidden_dim)
-    state = torch.randn(batch_size, state_dim, feats_T)
+    hidden = torch.randn(batch_size, hidden_size)
+    state = torch.randn(batch_size, state_size, feats_T)
     target = torch.randn(batch_size, target_mel_channels, feats_T)
     assert target.transpose(1, 2).size() == torch.Size([batch_size, feats_T, target_mel_channels])
-    c_hidden = torch.randn(batch_size, c_hidden_dim)
+    c_hidden = torch.randn(batch_size, c_hidden_size)
 
     action, next_controller_hidden = controller(hidden, state, target, c_hidden, prob)
 
-    assert next_controller_hidden.size() == torch.Size([batch_size, c_hidden_dim])
-    assert action.size() == torch.Size([batch_size, action_dim])
+    assert next_controller_hidden.size() == torch.Size([batch_size, c_hidden_size])
+    assert action.size() == torch.Size([batch_size, action_size])
