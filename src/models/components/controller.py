@@ -46,7 +46,9 @@ class Controller(AbsController):
             hidden_size=c_hidden_size,
             bias=bias,
         )
-        self.proj = torch.nn.Sequential(torch.nn.Linear(c_hidden_size, action_size), torch.nn.Tanh())
+        self.proj = torch.nn.Sequential(
+            torch.nn.Linear(c_hidden_size, action_size), torch.nn.Tanh()
+        )
 
     def forward(
         self,
