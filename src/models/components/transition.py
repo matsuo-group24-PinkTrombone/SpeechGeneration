@@ -1,6 +1,5 @@
 import torch
-from torch import nn
-from torch import Tensor
+from torch import Tensor, nn
 
 from src.models.abc._types import _tensor_or_any as _toa
 from src.models.abc.transition import Transition as AbstractTransition
@@ -54,4 +53,3 @@ class Transition(AbstractTransition):
     @property
     def hidden_shape(self) -> tuple[int]:
         return (self.hidden_size,)
-
