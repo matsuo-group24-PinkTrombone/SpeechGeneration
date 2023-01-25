@@ -46,4 +46,3 @@ def test_forward():
 def test_hidden_shape():
     model = Transition(**args)
     assert model.hidden_shape == (hidden_size,)
-
