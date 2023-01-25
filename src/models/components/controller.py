@@ -58,10 +58,10 @@ class Controller(AbsController):
     ):
         """
         Args:
-            hidden (Tensor):[B,hidden_size]
-            state (Tensor):[B,state_size]
-            target (Tensor):melspectrogram [B,in_channels, T_feats]
-            cotroller_hidden (Tensor):[B,c_hidden_size]
+            hidden (Tensor):hidden state of RNN[B,hidden_size]
+            state (Tensor):state of Observation [B,state_size]
+            target (Tensor):target melspectrogram [B,in_channels, T_feats]
+            cotroller_hidden (Tensor):hidden state of controller RNN[B,c_hidden_size]
             probabilistic (bool):  If True, sample action from normal distribution.
         """
         # target encoding
