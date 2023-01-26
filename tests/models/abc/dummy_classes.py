@@ -1,6 +1,7 @@
 from typing import Any
 
 import torch
+from torch.nn import Linear
 from torch import Tensor
 from torch.distributions import Normal
 
@@ -21,6 +22,7 @@ class DummyTransition(Transition):
     def __init__(self, hidden_shape: tuple[int], *args: Any, **kwds: Any) -> None:
         super().__init__()
         self._hidden_shape = hidden_shape
+        self.dmy_lyr = Linear(8, 16)
 
     def forward(self, hidden: Tensor, state: Tensor, action: Tensor) -> Tensor:
         return torch.randn(hidden.shape)
@@ -36,6 +38,7 @@ class DummyPrior(Prior):
     def __init__(self, state_shape: tuple[int], *args: Any, **kwds: Any) -> None:
         super().__init__()
         self._state_shape = state_shape
+        self.dmy_lyr = Linear(8, 16)
 
     def forward(self, hidden: Tensor) -> Normal:
         shape = (hidden.size(0), *self.state_shape)
@@ -57,6 +60,7 @@ class DummyObservationEncoder(ObservationEncoder):
         super().__init__()
         self._state_shape = state_shape
         self.embedded_obs_shape = embedded_obs_shape
+        self.dmy_lyr = Linear(8, 16)
 
     def embed_observation(self, obs: tuple[Tensor, Tensor]) -> Tensor:
         v, g = obs
@@ -87,6 +91,7 @@ class DummyObservationDecoder(ObservationDecoder):
         super().__init__()
         self._voc_state_shape = voc_state_shape
         self._generated_sound_shape = generated_sound_shape
+        self.dmy_lyr = Linear(8, 16)
 
     def forward(self, hidden: Tensor, state: Tensor) -> Tensor:
         vs_shape = (hidden.size(0), *self._voc_state_shape)
@@ -108,6 +113,7 @@ class DummyController(Controller):
 
         self._action_shape = action_shape
         self._controller_hidden_shape = controller_hidden_shape
+        self.dmy_lyr = Linear(8, 16)
 
     def forward(
         self,
