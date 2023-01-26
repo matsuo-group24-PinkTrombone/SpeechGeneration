@@ -204,3 +204,19 @@ def make_non_pad_mask(lengths, xs=None, length_dim=-1):
                  [1, 1, 0, 0, 0, 0]]], dtype=torch.uint8)
     """
     return ~make_pad_mask(lengths, xs, length_dim)
+
+
+def get_activation(act):
+    """Return activation function."""
+    # Lazy load to avoid unused import
+    from ..models.components.conformer.swish import Swish
+
+    activation_funcs = {
+        "hardtanh": torch.nn.Hardtanh,
+        "tanh": torch.nn.Tanh,
+        "relu": torch.nn.ReLU,
+        "selu": torch.nn.SELU,
+        "swish": Swish,
+    }
+
+    return activation_funcs[act]()
