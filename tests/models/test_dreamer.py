@@ -7,14 +7,16 @@ import pytest
 import torch
 from gym.spaces import Box
 from pynktrombonegym.env import PynkTrombone as PT
+from pynktrombonegym.spaces import ObservationSpaceNames as OSN
 from torch.optim import AdamW
 
-from src.env.array_voc_state import ARRAY_ORDER as AO_voc
-from src.env.array_action import ArrayAction as AA
-from pynktrombonegym.spaces import ObservationSpaceNames as OSN
-from src.env.array_action import ARRAY_ORDER as AO_act
+from src.datamodules import buffer_names
 from src.datamodules.replay_buffer import ReplayBuffer
-from src.env.array_voc_state import ArrayVocState as AVS, VSON
+from src.env.array_action import ARRAY_ORDER as AO_act
+from src.env.array_action import ArrayAction as AA
+from src.env.array_voc_state import ARRAY_ORDER as AO_voc
+from src.env.array_voc_state import VSON
+from src.env.array_voc_state import ArrayVocState as AVS
 from src.models.dreamer import Dreamer
 from tests.models.abc.dummy_classes import DummyAgent as DA
 from tests.models.abc.dummy_classes import DummyController as DC
@@ -23,7 +25,6 @@ from tests.models.abc.dummy_classes import DummyObservationEncoder as DOE
 from tests.models.abc.dummy_classes import DummyPrior as DP
 from tests.models.abc.dummy_classes import DummyTransition as DT
 from tests.models.abc.dummy_classes import DummyWorld as DW
-from src.datamodules import buffer_names 
 
 target_file_path = pathlib.Path(__file__).parents[2].joinpath("data/sample_target_sounds/*.wav")
 target_files = glob.glob(str(target_file_path))
@@ -55,12 +56,11 @@ world_opt = AdamW
 ctrl_opt = AdamW
 
 
-
 bf_size = 32
 bf_space = {
     buffer_names.ACTION: Box(-np.inf, np.inf, action_shape),
     buffer_names.DONE: Box(-np.inf, np.inf, (1,)),
-    buffer_names.GENERATED_SOUND: Box(-np.inf,np.inf, gen_sound_shape),
+    buffer_names.GENERATED_SOUND: Box(-np.inf, np.inf, gen_sound_shape),
     buffer_names.TARGET_SOUND: Box(-np.inf, np.inf, tgt_sound_shape),
     buffer_names.VOC_STATE: Box(-np.inf, np.inf, voc_stats_shape),
 }
@@ -85,7 +85,18 @@ def test_collect_experiences(num_steps):
 
 
 def test_world_training_step():
-    pass
+    model = Dreamer(*args, num_collect_experience_steps=128)
+    rb = ReplayBuffer(bf_space, bf_size)
+    rb = model.collect_experiences(env, rb)
+    experience = rb.sample(1, chunk_length=16)
+    print(rb.current_index)
+    loss_dict, experience = model.world_training_step(experience)
+    assert experience.get("hiddens") is not None
+    assert experience.get("states") is not None
+
+    model.world_optimizer.zero_grad()
+    loss_dict["loss"].backward()
+    model.world_optimizer.step()
 
 
 def test_controller_training_step():
