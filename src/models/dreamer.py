@@ -146,7 +146,6 @@ class Dreamer(nn.Module):
             voc_state_np = obs[ObsNames.VOC_STATE]
             generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
             target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
-            print(voc_state_np.shape)
             sample = {
                 buffer_names.ACTION: action,
                 buffer_names.VOC_STATE: voc_state_np,
