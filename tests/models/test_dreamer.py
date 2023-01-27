@@ -87,16 +87,13 @@ def test_collect_experiences(num_steps):
 def test_world_training_step():
     model = Dreamer(*args, num_collect_experience_steps=128)
     rb = ReplayBuffer(bf_space, bf_size)
-    rb = model.collect_experiences(env, rb)
+    _, __ = model.configure_optimizers()
+    model.collect_experiences(env, rb)
     experience = rb.sample(1, chunk_length=16)
-    print(rb.current_index)
+    print(rb.is_capacity_reached)
     loss_dict, experience = model.world_training_step(experience)
     assert experience.get("hiddens") is not None
     assert experience.get("states") is not None
-
-    model.world_optimizer.zero_grad()
-    loss_dict["loss"].backward()
-    model.world_optimizer.step()
 
 
 def test_controller_training_step():
