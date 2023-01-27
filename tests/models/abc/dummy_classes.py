@@ -1,9 +1,9 @@
 from typing import Any
 
 import torch
-from torch.nn import Linear
 from torch import Tensor
 from torch.distributions import Normal
+from torch.nn import Linear
 
 from src.models.abc.agent import Agent
 from src.models.abc.controller import Controller
