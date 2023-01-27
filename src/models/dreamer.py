@@ -225,7 +225,6 @@ class Dreamer(nn.Module):
                 batch_size, -1
             )
             all_kl_div_loss += kl_div_loss.sum(-1).mean()
-
             rec_voc_state_loss += F.mse_loss(voc_stat, rec_voc_stat)
             rec_generated_sound_loss += F.mse_loss(gened_sound, rec_gened_sound)
 
@@ -238,10 +237,9 @@ class Dreamer(nn.Module):
 
         rec_voc_state_loss /= chunk_size
         rec_generated_sound_loss /= chunk_size
-        kl_div_loss /= chunk_size
+        all_kl_div_loss /= chunk_size
         rec_loss = rec_voc_state_loss + rec_generated_sound_loss
-
-        loss = rec_loss + (not kl_div_loss.item() < self.free_nats) * kl_div_loss
+        loss = rec_loss + (not all_kl_div_loss.item() < self.free_nats) * all_kl_div_loss
 
         loss_dict = {
             "loss": loss,
@@ -249,9 +247,9 @@ class Dreamer(nn.Module):
             "rec_voc_state_loss": rec_voc_state_loss,
             "rec_generated_sound_loss": rec_generated_sound_loss,
             "kl_div_loss": kl_div_loss,
-            "over_free_nat": not kl_div_loss.item() < self.free_nats,
+            "over_free_nat": not all_kl_div_loss.item() < self.free_nats,
         }
-
+        
         experiences["hiddens"] = all_hiddens
         experiences["states"] = all_states
 
