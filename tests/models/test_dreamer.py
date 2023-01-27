@@ -6,14 +6,18 @@ import numpy as np
 import pytest
 import torch
 from gym.spaces import Box
-from pynktrombonegym.env import PynkTrombone as PT
+from pynktrombonegym.wrappers import Log1pMelSpectrogram as L1MS
+from pynktrombonegym.wrappers import ActionByAcceleration as ABA
+from src.env.normalize_action_range import NormalizeActionRange as NAR
+from src.env.array_action import ArrayAction as AA
+from src.env.array_voc_state import ArrayVocState as AVS
 from pynktrombonegym.spaces import ObservationSpaceNames as OSN
 from torch.optim import AdamW
 
 from src.datamodules import buffer_names
 from src.datamodules.replay_buffer import ReplayBuffer
 from src.env.array_action import ARRAY_ORDER as AO_act
-from src.env.array_action import ArrayAction as AA
+
 from src.env.array_voc_state import ARRAY_ORDER as AO_voc
 from src.env.array_voc_state import VSON
 from src.env.array_voc_state import ArrayVocState as AVS
@@ -28,7 +32,7 @@ from tests.models.abc.dummy_classes import DummyWorld as DW
 
 target_file_path = pathlib.Path(__file__).parents[2].joinpath("data/sample_target_sounds/*.wav")
 target_files = glob.glob(str(target_file_path))
-env = AA(AVS(PT(target_files)))
+env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
 
 hidden_shape = (16,)
 ctrl_hidden_shape = (16,)
