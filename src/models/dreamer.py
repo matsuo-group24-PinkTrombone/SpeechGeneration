@@ -204,10 +204,10 @@ class Dreamer(nn.Module):
         all_kl_div_loss = 0.0
 
         for idx in range(chunk_size):
-            action = torch.as_tensor(actions[idx], dtype, device)
+            action = torch.as_tensor(actions[idx], dtype=dtype, device=device)
 
-            voc_stat = torch.as_tensor(voc_states[idx], dtype, device)
-            gened_sound = torch.as_tensor(generated_sounds[idx], dtype, device)
+            voc_stat = torch.as_tensor(voc_states[idx], dtype=dtype, device=device)
+            gened_sound = torch.as_tensor(generated_sounds[idx], dtype=dtype, device=device)
             next_obs = (voc_stat, gened_sound)
 
             next_state_prior, next_state_posterior, next_hidden = self.world.forward(
