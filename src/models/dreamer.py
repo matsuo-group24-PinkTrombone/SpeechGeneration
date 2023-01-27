@@ -47,6 +47,8 @@ class Dreamer(nn.Module):
         imagination_horizon: int = 32,
         evaluation_steps: int = 44 * 60,
         evaluation_blank_length: int = 22050,
+        device: str = "cpu",
+        dtype: np.dtype = torch.float32,
     ) -> None:
         """
         Args:
@@ -64,6 +66,7 @@ class Dreamer(nn.Module):
             evaluation_blank_length (int):
         """
 
+        super().__init__()
         self.transition = transition
         self.prior = prior
         self.obs_encoder = obs_encoder
@@ -88,6 +91,9 @@ class Dreamer(nn.Module):
         self.imagination_horizon = imagination_horizon
         self.evaluation_steps = evaluation_steps
         self.evaluation_blank_length = evaluation_blank_length
+
+        self.device = device
+        self.dtype = dtype
 
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
@@ -128,9 +134,9 @@ class Dreamer(nn.Module):
         generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
         target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
 
-        voc_state = torch.as_tensor(voc_state_np, dtype, device).unsqueeze(0)
-        generated = torch.as_tensor(generated_np, dtype, device).unsqueeze(0)
-        target = torch.as_tensor(target_np, dtype, device).unsqueeze(0)
+        voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).unsqueeze(0)
+        generated = torch.as_tensor(generated_np, dtype=dtype, device=device).unsqueeze(0)
+        target = torch.as_tensor(target_np, dtype=dtype, device=device).unsqueeze(0)
 
         for _ in range(self.num_collect_experience_steps):
             action = self.agent.explore(obs=(voc_state, generated), target=target)
@@ -140,7 +146,7 @@ class Dreamer(nn.Module):
             voc_state_np = obs[ObsNames.VOC_STATE]
             generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
             target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
-
+            print(voc_state_np.shape)
             sample = {
                 buffer_names.ACTION: action,
                 buffer_names.VOC_STATE: voc_state_np,
@@ -157,9 +163,9 @@ class Dreamer(nn.Module):
                 generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
                 target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
 
-            voc_state = torch.as_tensor(voc_state_np, dtype, device).squeeze(0)
-            generated = torch.as_tensor(generated_np, dtype, device).squeeze(0)
-            target = torch.as_tensor(target_np, dtype, device).squeeze(0)
+            voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).squeeze(0)
+            generated = torch.as_tensor(generated_np, dtype=dtype, device=device).squeeze(0)
+            target = torch.as_tensor(target_np, dtype=dtype, device=device).squeeze(0)
 
     def world_training_step(
         self, experiences: dict[str, np.ndarray]
