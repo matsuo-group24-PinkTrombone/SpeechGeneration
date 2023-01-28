@@ -1,5 +1,5 @@
 import os
-from typing import List, Any
+from typing import Any, List
 
 import gym
 from omegaconf import DictConfig
@@ -12,29 +12,60 @@ from .array_voc_state import ArrayVocState
 from .normalize_action_range import NormalizeActionRange
 
 
-def make_env(dataset_dirs: List[Any], file_exts: List[str], action_scaler) -> gym.Env:
+def make_env(dataset_dirs: List[Any], file_exts: List[str], action_scaler: float, low: float, high: float) -> gym.Env:
     """
     Creates an environment instance from a list of audio dir paths.
-    
+
     Args:
-    configs: Any: A dictionary of configurations.
-    
+    dataset_dirs: List[Any]: A list of directory paths that contain audio files.
+    file_exts: List[str]: A list of file extensions of audio files.
+    action_scaler: float: The scaling factor of action.
+    low: float: The lower limit of action range.
+    high: float: The upper limit of action range.
     Returns:
     gym.Env: The created environment instance.
-
     """
-    
+    files = create_file_list(dataset_dirs, file_exts)
+    env = Log1pMelSpectrogram(files)
+    env = apply_wrappers(env, action_scaler, low, high)
+    return env
+
+
+def create_file_list(dataset_dirs: List[Any], file_exts: List[str]) -> List[str]:
+    """
+    Creates a list of audio file paths.
+
+    Args:
+    dataset_dirs: List[Any]: A list of directory paths that contain audio files.
+    file_exts: List[str]: A list of file extensions of audio files.
+
+    Returns:
+    List[str]: A list of audio file paths.
+    """
     files = []
     for dataset_dir in dataset_dirs:
         for ext in file_exts:
             files.extend(
                 [os.path.join(dataset_dir, f) for f in os.listdir(dataset_dir) if f.endswith(ext)]
             )
+    return files
 
-    # ラッパーを順番に適用
-    env = Log1pMelSpectrogram(files)
+
+def apply_wrappers(env: gym.Env, action_scaler: float, low: float, high: float) -> gym.Env:
+    """
+    Apply wrappers to the environment.
+
+    Args:
+    env: gym.Env: The environment to apply wrappers.
+    action_scaler: float: The scaling factor of action.
+    low: float: The lower limit of action range.
+    high: float: The upper limit of action range.
+
+    Returns:
+    gym.Env: The environment with applied wrappers.
+    """
     env = ActionByAcceleration(env, action_scaler=action_scaler)
-    env = NormalizeActionRange(env)
+    env = NormalizeActionRange(env, low=low, high=high)
     env = ArrayAction(env)
     env = ArrayVocState(env)
     return env
