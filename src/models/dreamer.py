@@ -28,8 +28,8 @@ class Dreamer(nn.Module):
     # Added attribute from Trainer
     current_step: int = 0
     current_episode: int = 0
-    device: torch.device
-    dtype: torch.dtype
+    device: torch.device = "cpu"
+    dtype: torch.dtype = torch.float32
 
     def __init__(
         self,
@@ -47,8 +47,6 @@ class Dreamer(nn.Module):
         imagination_horizon: int = 32,
         evaluation_steps: int = 44 * 60,
         evaluation_blank_length: int = 22050,
-        device: str = "cpu",
-        dtype: np.dtype = torch.float32,
     ) -> None:
         """
         Args:
@@ -92,8 +90,6 @@ class Dreamer(nn.Module):
         self.evaluation_steps = evaluation_steps
         self.evaluation_blank_length = evaluation_blank_length
 
-        self.device = device
-        self.dtype = dtype
 
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
@@ -279,10 +275,9 @@ class Dreamer(nn.Module):
         old_hiddens = experiences["hiddens"]
 
         chunk_size, batch_size = actions.shape[:2]
-
         start_indices = np.random.randint(0, chunk_size - self.imagination_horizon, (batch_size,))
         batch_arange = np.arange(batch_size)
-        hidden = torch.as_tensor(old_hiddens[start_indices, batch_arange], dtype, device)
+        hidden = torch.as_tensor(old_hiddens[start_indices, batch_arange], dtype=dtype, device=device)
         controller_hidden = torch.zeros(
             batch_size, *self.controller.controller_hidden_shape, dtype=dtype, device=device
         )
@@ -291,9 +286,9 @@ class Dreamer(nn.Module):
         loss = 0.0
         for i in range(self.imagination_horizon):
             indices = start_indices + i
-            target = torch.as_tensor(target_sounds[indices, batch_arange], dtype, device)
+            target = torch.as_tensor(target_sounds[indices, batch_arange], dtype=dtype, device=device)
             action, controller_hidden = self.controller.forward(
-                hidden, state, target, controller_hidden
+                hidden, state, target, controller_hidden, probabilistic=True
             )
             next_hidden = self.transition.forward(hidden, state, action)
             next_state = self.prior.forward(next_hidden).sample()
