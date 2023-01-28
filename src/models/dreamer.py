@@ -3,6 +3,7 @@ from functools import partial
 from typing import Any
 
 import gym
+from gym.spaces import Box
 import numpy as np
 import torch
 import torch.nn as nn
@@ -20,6 +21,7 @@ from .abc.observation_auto_encoder import ObservationDecoder, ObservationEncoder
 from .abc.prior import Prior
 from .abc.transition import Transition
 from .abc.world import World
+from ..env.array_voc_state import VocStateObsNames as VSON
 
 
 class Dreamer(nn.Module):
@@ -109,6 +111,22 @@ class Dreamer(nn.Module):
         con_optim = self.controller_optimizer(params=self.controller.parameters())
 
         return [world_optim, con_optim]
+
+    def configure_replay_buffer(self, env: gym.Env, buffer_size:int):
+        act_sp = env.action_space
+        voc_st_sp = env.observation_space[VSON.VOC_STATE]
+        tgt_sound_sp = env.observation_space[VSON.TARGET_SOUND_WAVE]
+        gen_sound_sp = env.observation_space[VSON.GENERATED_SOUND_WAVE]
+        spaces = {}
+        spaces[buffer_names.ACTION] = Box(act_sp.low, act_sp.high, act_sp.shape, act_sp.dtype)
+        spaces[buffer_names.VOC_STATE] = Box(voc_st_sp.low, voc_st_sp.high, voc_st_sp.shape, voc_st_sp.dtype)
+        spaces[buffer_names.GENERATED_SOUND] = Box(tgt_sound_sp.low, tgt_sound_sp.high, shape=tgt_sound_sp.shape, dtype=tgt_sound_sp.dtype)
+        spaces[buffer_names.TARGET_SOUND] =Box(gen_sound_sp.low, gen_sound_sp.high, shape=gen_sound_sp.shape, dtype=gen_sound_sp.dtype)
+        spaces[buffer_names.DONE] = Box(0, 1, shape=(1,), dtype=bool)
+
+        replay_buffer = ReplayBuffer(spaces, buffer_size)
+        
+        return replay_buffer
 
     @torch.no_grad()
     def collect_experiences(self, env: gym.Env, replay_buffer: ReplayBuffer) -> ReplayBuffer:
