@@ -56,11 +56,12 @@ prior = DP(state_shape)
 trans = DT(hidden_shape)
 ctrl = DC(action_shape, ctrl_hidden_shape)
 
-d_world = partial(DW())
-d_agent = partial(DA())
 
-world_opt = partial(SGD())
-ctrl_opt = partial(SGD())
+d_world = partial(DW)
+d_agent = partial(DA)
+
+world_opt = partial(SGD, lr=1e-3)
+ctrl_opt = partial(SGD, lr=1e-3)
 
 
 bf_size = 32
@@ -72,6 +73,15 @@ bf_space = {
     buffer_names.VOC_STATE: Box(-np.inf, np.inf, voc_stats_shape),
 }
 args = (trans, prior, obs_enc, obs_dec, ctrl, d_world, d_agent, world_opt, ctrl_opt)
+del env
+
+def world_training_step(model, env):
+    rb = ReplayBuffer(bf_space, bf_size)
+    _, __ = model.configure_optimizers()
+    model.collect_experiences(env, rb)
+    experience = rb.sample(1, chunk_length=16)
+    loss_dict, experience = model.world_training_step(experience)
+    return loss_dict, experience
 
 
 def test__init__():
@@ -85,27 +95,34 @@ def test_configure_optimizers():
 
 @pytest.mark.parametrize("num_steps", [1, 2, 3])
 def test_collect_experiences(num_steps):
+    env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
     rb = ReplayBuffer(bf_space, bf_size)
     model = Dreamer(*args, num_collect_experience_steps=num_steps)
     model.collect_experiences(env, rb)
     assert rb.current_index == num_steps
+    del env
 
 
 def test_world_training_step():
+    env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
     model = Dreamer(*args, num_collect_experience_steps=128)
-    rb = ReplayBuffer(bf_space, bf_size)
-    _, __ = model.configure_optimizers()
-    model.collect_experiences(env, rb)
-    experience = rb.sample(1, chunk_length=16)
-    print(rb.is_capacity_reached)
-    loss_dict, experience = model.world_training_step(experience)
+    loss_dict, experience = world_training_step(model, env)
     assert experience.get("hiddens") is not None
     assert experience.get("states") is not None
+    assert loss_dict.get("loss") is not None
+    del env
 
 
 def test_controller_training_step():
-    pass
+    # World Training Step
+    env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
+    model = Dreamer(*args, imagination_horizon=4)
+    _, experience = world_training_step(model, env)
+    loss_dict, _ = model.controller_training_step(experience)
+    assert loss_dict.get("loss") is not None
+    del env
 
 
 def test_evaluation_step():
     pass
+
