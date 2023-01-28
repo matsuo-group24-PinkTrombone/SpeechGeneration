@@ -40,7 +40,7 @@ def test_create_file_list():
     temp_file2 = tempfile.NamedTemporaryFile(dir=temp_dir1.name, suffix='.flac')
     temp_file3 = tempfile.NamedTemporaryFile(dir=temp_dir2.name, suffix='.txt')
     
-    # test1: normal case
+    # test1: case of directory exist
     dataset_dirs = [temp_dir1.name, temp_dir2.name]
     file_exts = [".wav", ".flac"]
     expected_output = [temp_file1.name, temp_file2.name]

@@ -17,13 +17,13 @@ def make_env(dataset_dirs: List[Any], file_exts: List[str], action_scaler: float
     Creates an environment instance from a list of audio dir paths.
 
     Args:
-    dataset_dirs: List[Any]: A list of directory paths that contain audio files.
-    file_exts: List[str]: A list of file extensions of audio files.
-    action_scaler: float: The scaling factor of action.
-    low: float: The lower limit of action range.
-    high: float: The upper limit of action range.
-    Returns:
-    gym.Env: The created environment instance.
+        dataset_dirs: List[Any]: A list of directory paths that contain audio files.
+        file_exts: List[str]: A list of file extensions of audio files.
+        action_scaler: float: The scaling factor of action.
+        low: float: The lower limit of action range.
+        high: float: The upper limit of action range.
+        Returns:
+        gym.Env: The created environment instance.
     """
     files = create_file_list(dataset_dirs, file_exts)
     env = Log1pMelSpectrogram(files)
@@ -36,11 +36,11 @@ def create_file_list(dataset_dirs: List[Any], file_exts: List[str]) -> List[str]
     Creates a list of audio file paths.
 
     Args:
-    dataset_dirs: List[Any]: A list of directory paths that contain audio files.
-    file_exts: List[str]: A list of file extensions of audio files.
+        dataset_dirs: List[Any]: A list of directory paths that contain audio files.
+        file_exts: List[str]: A list of file extensions of audio files.
 
     Returns:
-    List[str]: A list of audio file paths.
+        List[str]: A list of audio file paths.
     """
     files = []
     if not dataset_dirs:
@@ -62,13 +62,13 @@ def apply_wrappers(env: gym.Env, action_scaler: float, low: float, high: float) 
     Apply wrappers to the environment.
 
     Args:
-    env: gym.Env: The environment to apply wrappers.
-    action_scaler: float: The scaling factor of action.
-    low: float: The lower limit of action range.
-    high: float: The upper limit of action range.
+        env: gym.Env: The environment to apply wrappers.
+        action_scaler: float: The scaling factor of action.
+        low: float: The lower limit of action range.
+        high: float: The upper limit of action range.
 
     Returns:
-    gym.Env: The environment with applied wrappers.
+        gym.Env: The environment with applied wrappers.
     """
     env = ActionByAcceleration(env, action_scaler=action_scaler)
     env = NormalizeActionRange(env, low=low, high=high)
