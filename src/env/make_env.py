@@ -1,4 +1,5 @@
 import os
+from typing import List, Any
 
 import gym
 from omegaconf import DictConfig
@@ -11,7 +12,7 @@ from .array_voc_state import ArrayVocState
 from .normalize_action_range import NormalizeActionRange
 
 
-def make_env(configs: DictConfig) -> gym.Env:
+def make_env(dataset_dirs: List[Any], file_exts: List[str], action_scaler) -> gym.Env:
     """
     Creates an environment instance from a list of audio dir paths.
     
@@ -24,16 +25,16 @@ def make_env(configs: DictConfig) -> gym.Env:
     """
     
     files = []
-    for dataset_dir in configs["dataset_dirs"]:
-        for ext in configs["file_exts"]:
+    for dataset_dir in dataset_dirs:
+        for ext in file_exts:
             files.extend(
                 [os.path.join(dataset_dir, f) for f in os.listdir(dataset_dir) if f.endswith(ext)]
             )
 
     # ラッパーを順番に適用
     env = Log1pMelSpectrogram(files)
-    env = ActionByAcceleration(env, action_scaler=configs["action_scaler"])
+    env = ActionByAcceleration(env, action_scaler=action_scaler)
     env = NormalizeActionRange(env)
-    env = ArrayAction(env, new_step_api=configs["ArrayAction_new_step_api"])
-    env = ArrayVocState(env, new_step_api=configs["ArrayVocState_new_step_api"])
+    env = ArrayAction(env)
+    env = ArrayVocState(env)
     return env
