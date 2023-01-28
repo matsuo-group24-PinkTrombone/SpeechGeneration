@@ -12,7 +12,7 @@ from src.env.normalize_action_range import NormalizeActionRange as NAR
 from src.env.array_action import ArrayAction as AA
 from src.env.array_voc_state import ArrayVocState as AVS
 from pynktrombonegym.spaces import ObservationSpaceNames as OSN
-from torch.optim import AdamW
+from torch.optim import SGD
 
 from src.datamodules import buffer_names
 from src.datamodules.replay_buffer import ReplayBuffer
@@ -56,8 +56,11 @@ prior = DP(state_shape)
 trans = DT(hidden_shape)
 ctrl = DC(action_shape, ctrl_hidden_shape)
 
-world_opt = AdamW
-ctrl_opt = AdamW
+d_world = partial(DW())
+d_agent = partial(DA())
+
+world_opt = partial(SGD())
+ctrl_opt = partial(SGD())
 
 
 bf_size = 32
@@ -68,7 +71,7 @@ bf_space = {
     buffer_names.TARGET_SOUND: Box(-np.inf, np.inf, tgt_sound_shape),
     buffer_names.VOC_STATE: Box(-np.inf, np.inf, voc_stats_shape),
 }
-args = (trans, prior, obs_enc, obs_dec, ctrl, DW, DA, world_opt, ctrl_opt)
+args = (trans, prior, obs_enc, obs_dec, ctrl, d_world, d_agent, world_opt, ctrl_opt)
 
 
 def test__init__():
