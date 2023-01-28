@@ -158,3 +158,17 @@ def test_evaluation_step():
     assert loss_dict.get("target_generated_mae") is not None
     del env
 
+def test_configure_replay_buffer():
+    env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
+    model = Dreamer(*args)
+    rb = model.configure_replay_buffer(env, bf_size)
+    spaces = {
+        buffer_names.VOC_STATE: env.observation_space[VSON.VOC_STATE],
+        buffer_names.ACTION : env.action_space,
+        buffer_names.TARGET_SOUND: env.observation_space[VSON.TARGET_SOUND_WAVE],
+        buffer_names.GENERATED_SOUND: env.observation_space[VSON.GENERATED_SOUND_WAVE],
+        buffer_names.DONE: Box(0, 1, shape=(1,), dtype=bool)
+    }
+    for name, box in rb.spaces.items():
+        assert box == spaces.get(name), f"space {name} isn't set properly(box:{box}"
+    del env
