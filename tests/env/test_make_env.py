@@ -70,7 +70,3 @@ def test_create_file_list():
     
     # test for sample_target_sound_dir_paths
     assert create_file_list(sample_target_sound_dir_paths, [".wav"]) == glob.glob("data/**/*.wav", recursive=True)
-
-
-# test__init__()
-test_create_file_list()
