@@ -43,11 +43,17 @@ def create_file_list(dataset_dirs: List[Any], file_exts: List[str]) -> List[str]
     List[str]: A list of audio file paths.
     """
     files = []
+    if not dataset_dirs:
+        return files
+    file_exts = [ext.lower() for ext in file_exts]
     for dataset_dir in dataset_dirs:
-        for ext in file_exts:
-            files.extend(
-                [os.path.join(dataset_dir, f) for f in os.listdir(dataset_dir) if f.endswith(ext)]
-            )
+        if os.path.isdir(dataset_dir):
+            for ext in file_exts:
+                files.extend(
+                    [os.path.join(dataset_dir, f) for f in os.listdir(dataset_dir) if f.endswith(ext)]
+                )
+        else:
+            print(f"{dataset_dir} is not a directory.")
     return files
 
 
