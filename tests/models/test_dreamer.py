@@ -6,21 +6,19 @@ import numpy as np
 import pytest
 import torch
 from gym.spaces import Box
-from pynktrombonegym.wrappers import Log1pMelSpectrogram as L1MS
-from pynktrombonegym.wrappers import ActionByAcceleration as ABA
-from src.env.normalize_action_range import NormalizeActionRange as NAR
-from src.env.array_action import ArrayAction as AA
-from src.env.array_voc_state import ArrayVocState as AVS
 from pynktrombonegym.spaces import ObservationSpaceNames as OSN
+from pynktrombonegym.wrappers import ActionByAcceleration as ABA
+from pynktrombonegym.wrappers import Log1pMelSpectrogram as L1MS
 from torch.optim import SGD
 
 from src.datamodules import buffer_names
 from src.datamodules.replay_buffer import ReplayBuffer
 from src.env.array_action import ARRAY_ORDER as AO_act
-
+from src.env.array_action import ArrayAction as AA
 from src.env.array_voc_state import ARRAY_ORDER as AO_voc
 from src.env.array_voc_state import VSON
 from src.env.array_voc_state import ArrayVocState as AVS
+from src.env.normalize_action_range import NormalizeActionRange as NAR
 from src.models.dreamer import Dreamer
 from tests.models.abc.dummy_classes import DummyAgent as DA
 from tests.models.abc.dummy_classes import DummyController as DC
@@ -75,6 +73,7 @@ bf_space = {
 args = (trans, prior, obs_enc, obs_dec, ctrl, d_world, d_agent, world_opt, ctrl_opt)
 del env
 
+
 def world_training_step(model, env):
     rb = ReplayBuffer(bf_space, bf_size)
     _, __ = model.configure_optimizers()
@@ -82,6 +81,8 @@ def world_training_step(model, env):
     experience = rb.sample(1, chunk_length=16)
     loss_dict, experience = model.world_training_step(experience)
     return loss_dict, experience
+
+
 def _hasattrs(model):
     attributes = (
         "transition",
@@ -105,6 +106,7 @@ def _hasattrs(model):
         print(hasattr(model, attr))
     return have_attr, attributes
 
+
 def test__init__():
     model = Dreamer(*args)
     has_attrs, attrs = _hasattrs(model)
@@ -113,7 +115,7 @@ def test__init__():
             pass
         else:
             assert False, f"attribute {attrs[idx]} doesn't set"
-    
+
 
 def test_configure_optimizers():
     model = Dreamer(*args)
@@ -158,16 +160,17 @@ def test_evaluation_step():
     assert loss_dict.get("target_generated_mae") is not None
     del env
 
+
 def test_configure_replay_buffer():
     env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
     model = Dreamer(*args)
     rb = model.configure_replay_buffer(env, bf_size)
     spaces = {
         buffer_names.VOC_STATE: env.observation_space[VSON.VOC_STATE],
-        buffer_names.ACTION : env.action_space,
+        buffer_names.ACTION: env.action_space,
         buffer_names.TARGET_SOUND: env.observation_space[VSON.TARGET_SOUND_WAVE],
         buffer_names.GENERATED_SOUND: env.observation_space[VSON.GENERATED_SOUND_WAVE],
-        buffer_names.DONE: Box(0, 1, shape=(1,), dtype=bool)
+        buffer_names.DONE: Box(0, 1, shape=(1,), dtype=bool),
     }
     for name, box in rb.spaces.items():
         assert box == spaces.get(name), f"space {name} isn't set properly(box:{box}"

@@ -3,11 +3,11 @@ from functools import partial
 from typing import Any
 
 import gym
-from gym.spaces import Box
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from gym.spaces import Box
 from torch import Tensor
 from torch.distributions import kl_divergence
 from torch.optim import Optimizer
@@ -15,13 +15,13 @@ from torch.optim import Optimizer
 from ..datamodules import buffer_names
 from ..datamodules.replay_buffer import ReplayBuffer
 from ..env.array_voc_state import VocStateObsNames as ObsNames
+from ..env.array_voc_state import VocStateObsNames as VSON
 from .abc.agent import Agent
 from .abc.controller import Controller
 from .abc.observation_auto_encoder import ObservationDecoder, ObservationEncoder
 from .abc.prior import Prior
 from .abc.transition import Transition
 from .abc.world import World
-from ..env.array_voc_state import VocStateObsNames as VSON
 
 
 class Dreamer(nn.Module):
@@ -92,7 +92,6 @@ class Dreamer(nn.Module):
         self.evaluation_steps = evaluation_steps
         self.evaluation_blank_length = evaluation_blank_length
 
-
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
 
@@ -112,7 +111,7 @@ class Dreamer(nn.Module):
 
         return [world_optim, con_optim]
 
-    def configure_replay_buffer(self, env: gym.Env, buffer_size:int):
+    def configure_replay_buffer(self, env: gym.Env, buffer_size: int):
         action_box = env.action_space
         vocal_state_box = env.observation_space[VSON.VOC_STATE]
         target_sound_box = env.observation_space[VSON.TARGET_SOUND_WAVE]
@@ -125,7 +124,7 @@ class Dreamer(nn.Module):
         spaces[buffer_names.DONE] = Box(0, 1, shape=(1,), dtype=bool)
 
         replay_buffer = ReplayBuffer(spaces, buffer_size)
-        
+
         return replay_buffer
 
     @torch.no_grad()
@@ -263,7 +262,7 @@ class Dreamer(nn.Module):
             "kl_div_loss": kl_div_loss,
             "over_free_nat": not all_kl_div_loss.item() < self.free_nats,
         }
-        
+
         experiences["hiddens"] = all_hiddens
         experiences["states"] = all_states
 
@@ -295,7 +294,9 @@ class Dreamer(nn.Module):
         chunk_size, batch_size = actions.shape[:2]
         start_indices = np.random.randint(0, chunk_size - self.imagination_horizon, (batch_size,))
         batch_arange = np.arange(batch_size)
-        hidden = torch.as_tensor(old_hiddens[start_indices, batch_arange], dtype=dtype, device=device)
+        hidden = torch.as_tensor(
+            old_hiddens[start_indices, batch_arange], dtype=dtype, device=device
+        )
         controller_hidden = torch.zeros(
             batch_size, *self.controller.controller_hidden_shape, dtype=dtype, device=device
         )
@@ -304,7 +305,9 @@ class Dreamer(nn.Module):
         loss = 0.0
         for i in range(self.imagination_horizon):
             indices = start_indices + i
-            target = torch.as_tensor(target_sounds[indices, batch_arange], dtype=dtype, device=device)
+            target = torch.as_tensor(
+                target_sounds[indices, batch_arange], dtype=dtype, device=device
+            )
             action, controller_hidden = self.controller.forward(
                 hidden, state, target, controller_hidden, probabilistic=True
             )
