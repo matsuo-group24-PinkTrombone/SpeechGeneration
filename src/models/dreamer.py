@@ -63,7 +63,10 @@ class Dreamer(nn.Module):
             controller_optimizer (partial[Optimizer]): Partial instance of Optimizer class.
 
             free_nats (float): Ignore kl div loss when it is less then this value.
-            evaluation_blank_length (int):
+            num_collect_experience_steps: Specifies the number of times the experiences are stored.
+            imagination_horizon: Specifies the number of state transitions that controller needs for learning.
+            evaluation_steps: Specifies the number of evaluations.
+            evaluation_blank_length (int):The blank lengths of generated/target sound.
         """
 
         super().__init__()
@@ -111,7 +114,16 @@ class Dreamer(nn.Module):
 
         return [world_optim, con_optim]
 
-    def configure_replay_buffer(self, env: gym.Env, buffer_size: int):
+    def configure_replay_buffer(self, env: gym.Env, buffer_size: int) -> ReplayBuffer:
+        """Configure replay buffer to store experiences.
+
+        Args:
+            env (gym.Env): PynkTrombone environment or its wrapper class.
+            buffer_size (int): Max length of experiences you can store.
+
+        Returns:
+            ReplayBuffer: Replay buffer that can store experiences.
+        """
         action_box = env.action_space
         vocal_state_box = env.observation_space[VSON.VOC_STATE]
         target_sound_box = env.observation_space[VSON.TARGET_SOUND_WAVE]
@@ -134,7 +146,6 @@ class Dreamer(nn.Module):
         Args:
             env (gym.Env): PynkTrombone environment or its wrapper class.
             replay_buffer (ReplayBuffer): Storing experiences.
-            num_steps (int): How much experiences to store.
 
         Returns:
             replay_buffer(ReplayBuffer): Same pointer of input replay_buffer.
