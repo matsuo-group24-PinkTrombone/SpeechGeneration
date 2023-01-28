@@ -82,11 +82,38 @@ def world_training_step(model, env):
     experience = rb.sample(1, chunk_length=16)
     loss_dict, experience = model.world_training_step(experience)
     return loss_dict, experience
-
+def _hasattrs(model):
+    attributes = (
+        "transition",
+        "prior",
+        "obs_encoder",
+        "obs_decoder",
+        "controller",
+        "world",
+        "agent",
+        "world_optimizer",
+        "controller_optimizer",
+        "free_nats",
+        "num_collect_experience_steps",
+        "imagination_horizon",
+        "evaluation_steps",
+        "evaluation_blank_length",
+    )
+    have_attr = []
+    for attr in attributes:
+        have_attr += [hasattr(model, attr)]
+        print(hasattr(model, attr))
+    return have_attr, attributes
 
 def test__init__():
     model = Dreamer(*args)
-
+    has_attrs, attrs = _hasattrs(model)
+    for idx, has_attr_flag in enumerate(has_attrs):
+        if has_attr_flag:
+            pass
+        else:
+            assert False, f"attribute {attrs[idx]} doesn't set"
+    
 
 def test_configure_optimizers():
     model = Dreamer(*args)
@@ -124,5 +151,10 @@ def test_controller_training_step():
 
 
 def test_evaluation_step():
-    pass
+    env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
+    model = Dreamer(*args)
+    loss_dict = model.evaluation_step(env)
+    assert loss_dict.get("target_generated_mse") is not None
+    assert loss_dict.get("target_generated_mae") is not None
+    del env
 
