@@ -45,7 +45,7 @@ class World:
         next_obs: _tensor_or_any,
         *args: Any,
         **kwds: Any,
-    ) -> tuple[_dist_or_any, _dist_or_any, _tensor_or_any, _tensor_or_any]:
+    ) -> tuple[_dist_or_any, _dist_or_any, _tensor_or_any]:
         """Make world model transition.
 
         Args:

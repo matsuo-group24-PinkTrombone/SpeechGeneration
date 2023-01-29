@@ -11,6 +11,7 @@ from gym.spaces import Box
 from torch import Tensor
 from torch.distributions import kl_divergence
 from torch.optim import Optimizer
+from torch.utils.tensorboard import SummaryWriter
 
 from ..datamodules import buffer_names
 from ..datamodules.replay_buffer import ReplayBuffer
@@ -32,7 +33,7 @@ class Dreamer(nn.Module):
     current_episode: int = 0
     device: torch.device = "cpu"
     dtype: torch.dtype = torch.float32
-
+    tensorboard: SummaryWriter
     def __init__(
         self,
         transition: Transition,
@@ -203,8 +204,8 @@ class Dreamer(nn.Module):
             loss_dict (dict[str, Any]): loss and some other metric values.
             experiences (dict[str, np.ndarray]): Added `all_hiddens` and `all_states`.
         """
-        device = self.agent.hidden.device
-        dtype = self.agent.hidden.dtype
+        device = self.device
+        dtype = self.dtype
 
         self.world.train()
 
