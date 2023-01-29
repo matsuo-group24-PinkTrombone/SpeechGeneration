@@ -14,14 +14,14 @@ def make_env(dataset_dirs: List[Any], file_exts: List[str] = ["wav"],
              action_scaler: Optional[float] = None, low: float = -1.0, high: float = 1.0, 
              sample_rate: int = 44100, n_mels: int = 80, dtype: Any = np.float32) -> gym.Env:
     """
-    Creates an environment instance from a list of audio dir paths.
+    Creates an wrapped environment instance from a list of audio dir paths.
 
     Args:
         dataset_dirs (List[Any]): A list of directory paths that contain audio files.
-        file_exts (Optional[List[str]]): A list of file extensions of audio files. Default is None.
+        file_exts (Optional[List[str]]): A list of file extensions of audio files. Default is ["wav"].
         action_scaler (Optional[float]): The scaling factor of action. Default is None.
-        low (Optional[float]): The lower limit of action range. Default is None.
-        high (Optional[float]): The upper limit of action range. Default is None.
+        low (Optional[float]): The lower limit of action range. Default is -1.0.
+        high (Optional[float]): The upper limit of action range. Default is 1.0.
         sample_rate (int): The sample rate of audio files. Default is 44100.
         n_mels (int): The number of mel bands to generate. Default is 80.
         dtype (Any): The data type of the audio. Default is np.float32.
@@ -41,7 +41,7 @@ def make_env(dataset_dirs: List[Any], file_exts: List[str] = ["wav"],
 
 def create_file_list(dataset_dirs: List[Any], file_exts: List[str]) -> List[str]:
     """
-    Creates a list of audio file paths.
+    Creates a list of audio file paths from A list of directory paths that contain audio files.
 
     Args:
         dataset_dirs: List[Any]: A list of directory paths that contain audio files.
@@ -68,10 +68,10 @@ def apply_wrappers(env: gym.Env, action_scaler: float, low: float, high: float) 
     Apply wrappers to the environment.
 
     Args:
-        env: gym.Env: The environment to apply wrappers.
+        env (gym.Env): PynkTromboneGym Env or its wrapper.
         action_scaler: float: The scaling factor of action.
-        low: float: The lower limit of action range.
-        high: float: The upper limit of action range.
+        low (float): The lowest value of normalized action.
+        high (float): The highest value of normalized action.
 
     Returns:
         gym.Env: The environment with applied wrappers.
