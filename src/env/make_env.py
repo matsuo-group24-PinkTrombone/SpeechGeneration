@@ -13,7 +13,7 @@ from .array_voc_state import ArrayVocState
 from .normalize_action_range import NormalizeActionRange
 
 
-def make_env(dataset_dirs: List[Any], file_exts: List[str] = [".wav"], 
+def make_env(dataset_dirs: List[Any], file_exts: Optional[List[str]] = None, 
              action_scaler: Optional[float] = None, low: Optional[float] = None, high: Optional[float] = None, 
              sample_rate: int = 44100, n_mels: int = 80, dtype: Any = np.float32) -> gym.Env:
     """
@@ -32,13 +32,30 @@ def make_env(dataset_dirs: List[Any], file_exts: List[str] = [".wav"],
     Returns:
         gym.Env: The created environment instance.
     """
+    file_exts = file_exts or [".wav"]
     files = create_file_list(dataset_dirs, file_exts)
-    env = Log1pMelSpectrogram(files, n_mels=n_mels, sample_rate=sample_rate, dtype=dtype)
-    env = apply_wrappers(env, action_scaler, low, high)
+    
+    env_kwargs = {}
+    if n_mels is not None:
+        env_kwargs['n_mels'] = n_mels
+    if sample_rate is not None:
+        env_kwargs['sample_rate'] = sample_rate
+    if dtype is not None:
+        env_kwargs['dtype'] = dtype
+    env = Log1pMelSpectrogram(files, **env_kwargs)
+    
+    apply_wrappers_kwargs = {}
+    if action_scaler is not None:
+        apply_wrappers_kwargs['action_scaler'] = action_scaler
+    if low is not None:
+        apply_wrappers_kwargs['low'] = low
+    if high is not None:
+        apply_wrappers_kwargs['high'] = high
+    env = apply_wrappers(env, **apply_wrappers_kwargs)
     return env
 
 
-def create_file_list(dataset_dirs: List[Any], file_exts: List[str] = None) -> List[str]:
+def create_file_list(dataset_dirs: List[Any], file_exts: Optional[List[str]] = None) -> List[str]:
     """
     Creates a list of audio file paths.
 
@@ -52,6 +69,8 @@ def create_file_list(dataset_dirs: List[Any], file_exts: List[str] = None) -> Li
     files = []
     if not dataset_dirs:
         return files
+    if file_exts is None:
+        file_exts = [".wav"]
     file_exts = [ext.lower() for ext in file_exts]
     for dataset_dir in dataset_dirs:
         if os.path.isdir(dataset_dir):
@@ -64,7 +83,7 @@ def create_file_list(dataset_dirs: List[Any], file_exts: List[str] = None) -> Li
     return files
 
 
-def apply_wrappers(env: gym.Env, action_scaler: float, low: float, high: float) -> gym.Env:
+def apply_wrappers(env: gym.Env, action_scaler: float = 1.0, low: float = 10.0, high: float = 10.0) -> gym.Env:
     """
     Apply wrappers to the environment.
 
