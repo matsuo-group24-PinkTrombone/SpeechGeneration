@@ -31,14 +31,7 @@ def make_env(dataset_dirs: List[Any], file_exts: List[str] = ["wav"],
     """
     files = create_file_list(dataset_dirs, file_exts)
     
-    base_env_kwargs = {}
-    if n_mels is not None:
-        base_env_kwargs['n_mels'] = n_mels
-    if sample_rate is not None:
-        base_env_kwargs['sample_rate'] = sample_rate
-    if dtype is not None:
-        base_env_kwargs['dtype'] = dtype
-    base_env = Log1pMelSpectrogram(files, **base_env_kwargs)
+    base_env = Log1pMelSpectrogram(files, sample_rate=sample_rate, n_mels=n_mels, dtype=dtype)
     
     apply_wrappers_kwargs = {}
     if action_scaler is not None:
