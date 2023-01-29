@@ -3,7 +3,6 @@ from typing import Any, List, Optional
 
 import gym
 import numpy as np
-from omegaconf import DictConfig
 from pynktrombonegym.wrappers.action_by_acceleration import \
     ActionByAcceleration
 from pynktrombonegym.wrappers.log1p_mel_spectrogram import Log1pMelSpectrogram
@@ -35,14 +34,14 @@ def make_env(dataset_dirs: List[Any], file_exts: Optional[List[str]] = None,
     file_exts = file_exts or [".wav"]
     files = create_file_list(dataset_dirs, file_exts)
     
-    env_kwargs = {}
+    base_env_kwargs = {}
     if n_mels is not None:
-        env_kwargs['n_mels'] = n_mels
+        base_env_kwargs['n_mels'] = n_mels
     if sample_rate is not None:
-        env_kwargs['sample_rate'] = sample_rate
+        base_env_kwargs['sample_rate'] = sample_rate
     if dtype is not None:
-        env_kwargs['dtype'] = dtype
-    env = Log1pMelSpectrogram(files, **env_kwargs)
+        base_env_kwargs['dtype'] = dtype
+    base_env = Log1pMelSpectrogram(files, **base_env_kwargs)
     
     apply_wrappers_kwargs = {}
     if action_scaler is not None:
@@ -51,7 +50,7 @@ def make_env(dataset_dirs: List[Any], file_exts: Optional[List[str]] = None,
         apply_wrappers_kwargs['low'] = low
     if high is not None:
         apply_wrappers_kwargs['high'] = high
-    env = apply_wrappers(env, **apply_wrappers_kwargs)
+    env = apply_wrappers(base_env, **apply_wrappers_kwargs)
     return env
 
 

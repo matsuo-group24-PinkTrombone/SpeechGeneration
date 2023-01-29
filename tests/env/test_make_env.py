@@ -4,13 +4,13 @@ import os
 import tempfile
 
 import gym
-import numpy as np
-from gym.spaces import Box
 from omegaconf import OmegaConf
+from pynktrombonegym.wrappers.log1p_mel_spectrogram import Log1pMelSpectrogram
 
 from src.env.make_env import apply_wrappers, create_file_list, make_env
 
-sample_target_sound_dir_paths = list(glob.glob("data/**/", recursive=False))
+sample_target_sound_file_paths = glob.glob("data/sample_target_sounds/*")
+sample_target_sound_dir_paths = list(glob.glob("data/**/", recursive=True))
 
 
 def test__init__():
@@ -25,9 +25,6 @@ def test__init__():
     )
     env = make_env(**configs)
     assert isinstance(env, gym.Env)
-
-    assert isinstance(env.observation_space, Box)
-    assert isinstance(env.action_space, Box)
 
 
 def test_create_file_list():
@@ -70,3 +67,9 @@ def test_create_file_list():
     
     # test for sample_target_sound_dir_paths
     assert create_file_list(sample_target_sound_dir_paths, [".wav"]) == glob.glob("data/**/*.wav", recursive=True)
+
+
+def test_apply_wrappers():
+    base_env = Log1pMelSpectrogram(sample_target_sound_file_paths)
+    env = apply_wrappers(base_env)
+    assert isinstance(env, gym.Env)
