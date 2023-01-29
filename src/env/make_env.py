@@ -10,8 +10,8 @@ from .array_voc_state import ArrayVocState
 from .normalize_action_range import NormalizeActionRange
 
 
-def make_env(dataset_dirs: List[Any], file_exts: Optional[List[str]] = None, 
-             action_scaler: Optional[float] = None, low: Optional[float] = None, high: Optional[float] = None, 
+def make_env(dataset_dirs: List[Any], file_exts: List[str] = ["wav"], 
+             action_scaler: Optional[float] = None, low: float = -1.0, high: float = 1.0, 
              sample_rate: int = 44100, n_mels: int = 80, dtype: Any = np.float32) -> gym.Env:
     """
     Creates an environment instance from a list of audio dir paths.
