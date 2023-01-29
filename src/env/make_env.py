@@ -29,7 +29,6 @@ def make_env(dataset_dirs: List[Any], file_exts: List[str] = ["wav"],
     Returns:
         gym.Env: The created environment instance.
     """
-    file_exts = file_exts or [".wav"]
     files = create_file_list(dataset_dirs, file_exts)
     
     base_env_kwargs = {}
