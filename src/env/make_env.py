@@ -3,9 +3,7 @@ from typing import Any, List, Optional
 
 import gym
 import numpy as np
-from pynktrombonegym.wrappers.action_by_acceleration import \
-    ActionByAcceleration
-from pynktrombonegym.wrappers.log1p_mel_spectrogram import Log1pMelSpectrogram
+from pynktrombonegym.wrappers import ActionByAcceleration, Log1pMelSpectrogram
 
 from .array_action import ArrayAction
 from .array_voc_state import ArrayVocState
