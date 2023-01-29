@@ -10,19 +10,17 @@ from pynktrombonegym.wrappers.log1p_mel_spectrogram import Log1pMelSpectrogram
 from src.env.make_env import apply_wrappers, create_file_list, make_env
 
 sample_target_sound_file_paths = glob.glob("data/sample_target_sounds/*")
-sample_target_sound_dir_paths = list(glob.glob("data/**/", recursive=True))
+sample_target_sound_dir_paths = ["data/sample_target_sounds/"]
 
 
 def test__init__():
-    configs = OmegaConf.create(
-        {
+    configs = {
             "dataset_dirs": sample_target_sound_dir_paths,
             "file_exts": [".wav"],
             "action_scaler": 1.0,
             "low": -10.0,
             "high": 10.0,
-        }
-    )
+    }
     env = make_env(**configs)
     assert isinstance(env, gym.Env)
 

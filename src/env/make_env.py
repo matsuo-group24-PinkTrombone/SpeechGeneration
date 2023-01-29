@@ -33,18 +33,13 @@ def make_env(dataset_dirs: List[Any], file_exts: List[str] = ["wav"],
     
     base_env = Log1pMelSpectrogram(files, sample_rate=sample_rate, n_mels=n_mels, dtype=dtype)
     
-    apply_wrappers_kwargs = {}
-    if action_scaler is not None:
-        apply_wrappers_kwargs['action_scaler'] = action_scaler
-    if low is not None:
-        apply_wrappers_kwargs['low'] = low
-    if high is not None:
-        apply_wrappers_kwargs['high'] = high
-    env = apply_wrappers(base_env, **apply_wrappers_kwargs)
+    if action_scaler is None:
+        action_scaler = base_env.generate_chunk / base_env.sample_rate
+    env = apply_wrappers(base_env, action_scaler, low, high)
     return env
 
 
-def create_file_list(dataset_dirs: List[Any], file_exts: Optional[List[str]] = None) -> List[str]:
+def create_file_list(dataset_dirs: List[Any], file_exts: List[str]) -> List[str]:
     """
     Creates a list of audio file paths.
 
@@ -56,10 +51,6 @@ def create_file_list(dataset_dirs: List[Any], file_exts: Optional[List[str]] = N
         List[str]: A list of audio file paths.
     """
     files = []
-    if not dataset_dirs:
-        return files
-    if file_exts is None:
-        file_exts = [".wav"]
     file_exts = [ext.lower() for ext in file_exts]
     for dataset_dir in dataset_dirs:
         if os.path.isdir(dataset_dir):
@@ -68,11 +59,11 @@ def create_file_list(dataset_dirs: List[Any], file_exts: Optional[List[str]] = N
                     [os.path.join(dataset_dir, f) for f in os.listdir(dataset_dir) if f.endswith(ext)]
                 )
         else:
-            print(f"{dataset_dir} is not a directory.")
+            raise ValueError(f"{dataset_dir} is not a directory or does not exist.")
     return files
 
 
-def apply_wrappers(env: gym.Env, action_scaler: float = 1.0, low: float = 10.0, high: float = 10.0) -> gym.Env:
+def apply_wrappers(env: gym.Env, action_scaler: float, low: float, high: float) -> gym.Env:
     """
     Apply wrappers to the environment.
 
