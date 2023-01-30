@@ -1,6 +1,7 @@
 import glob
 import os
 import pathlib
+from datetime import datetime
 from functools import partial
 
 import numpy as np
@@ -75,7 +76,7 @@ bf_space = {
 args = (trans, prior, obs_enc, obs_dec, ctrl, d_world, d_agent, world_opt, ctrl_opt)
 del env
 
-tb_log_dir = "logs/test_dreamer"
+tb_log_dir = f"logs/test_dreamer/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 # tensorboard = SummaryWriter(tb_log_dir)
 
 
