@@ -34,7 +34,7 @@ class Dreamer(nn.Module):
     device: torch.device = "cpu"
     dtype: torch.dtype = torch.float32
     tensorboard: SummaryWriter
-    log_every_n_steps: int = 1
+    log_every_n_steps: int = 1  # intervals for logging
 
     def __init__(
         self,
