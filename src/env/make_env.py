@@ -24,10 +24,10 @@ def make_env(
 
     Args:
         dataset_dirs (List[Any]): A list of directory paths that contain audio files.
-        file_exts (Optional[List[str]]): A list of file extensions of audio files. Default is [".wav"].
-        action_scaler (Optional[float]): The scaling factor of action. Default is None.
-        low (Optional[float]): The lower limit of action range. Default is -1.0.
-        high (Optional[float]): The upper limit of action range. Default is 1.0.
+        file_exts (List[str]): A list of file extensions of audio files. Default is [".wav"].
+        action_scaler (float): The scaling factor of action. Default is None.
+        low (float): The lower limit of action range. Default is -1.0.
+        high (float): The upper limit of action range. Default is 1.0.
         sample_rate (int): The sample rate of audio files. Default is 44100.
         n_mels (int): The number of mel bands to generate. Default is 80.
         dtype (Any): The data type of the audio. Default is np.float32.
@@ -56,7 +56,6 @@ def create_file_list(dataset_dirs: List[Any], file_exts: List[str]) -> List[str]
         List[str]: A list of audio file paths.
     """
     files = []
-    file_exts = [ext.lower() for ext in file_exts]
     for dataset_dir in dataset_dirs:
         if os.path.isdir(dataset_dir):
             for ext in file_exts:
