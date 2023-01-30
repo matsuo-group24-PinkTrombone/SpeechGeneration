@@ -97,4 +97,4 @@ class Controller(AbsController):
 
     @property
     def controller_hidden_shape(self):
-        return self.c_hidden_size
+        return (self.c_hidden_size,)
