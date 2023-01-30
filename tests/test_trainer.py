@@ -4,6 +4,7 @@ import pytest
 import torch
 from torch.optim import SGD
 
+from src.env.make_env import make_env
 from src.models.abc.world import World
 from src.models.components.conformer_decoder_fastspeech2 import ConformerDecoder as CD
 from src.models.components.controller import Controller as Ctrl
@@ -39,15 +40,16 @@ world = partial(World)
 
 agent = partial(Agent)
 
-w_opt = partial(SGD)
-c_opt = partial(SGD)
+w_opt = partial(SGD, lr=1e-3)
+c_opt = partial(SGD, lr=1e-3)
 
 dreamer_args = (trans, prior, obs_enc, obs_dec, ctrl, world, agent, w_opt, c_opt)
+
+save_path = "tests/sample_model/sample.pt"
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test__init__(device):
-    # on cpu
     mod = Trainer(device=device)
     assert mod.num_episode is not None
     assert mod.collect_experience_interval is not None
@@ -72,14 +74,27 @@ def test_setup_model_attribute(device):
     assert dreamer.current_step == 0
 
 
-# @pytest.mark.parametrize("device", ["cpu", "device"])
-def test_fit():
-    pass
+@pytest.mark.parametrize("device", ["cpu", "cuda"])
+def test_fit(device):
+    env = make_env(["data/sample_target_sounds"])
+    trainer = Trainer(device=device, collect_experience_interval=2)
+    dreamer = Dreamer(*dreamer_args)
+    rb = dreamer.configure_replay_buffer(env, buffer_size=4)
+    trainer.fit(env, rb, dreamer)
+    del env
 
+@pytest.mark.parametrize("device", ["cpu", "cuda"])
+def test_save_checkpoint(device):
+    dreamer = Dreamer(*dreamer_args)
+    env = make_env(["data/sample_target_sounds"])
+    rb = dreamer.configure_replay_buffer(env, buffer_size=4)
+    trainer = Trainer(device=device, collect_experience_interval=2)
+    wopt, copt = dreamer.configure_optimizers()
+    trainer.save_checkpoint(save_path, dreamer, wopt, copt)
 
-def test_save_checkpoint():
-    pass
-
-
-def test_load_checkpoint():
-    pass
+@pytest.mark.parametrize("device", ["cpu", "cuda"])
+def test_load_checkpoint(device):
+    trainer = Trainer(device=device, collect_experience_interval=2)
+    dreamer = Dreamer(*dreamer_args)
+    wopt, copt = dreamer.configure_optimizers()
+    trainer.load_checkpoint(save_path, dreamer, wopt, copt)
