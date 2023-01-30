@@ -77,7 +77,6 @@ args = (trans, prior, obs_enc, obs_dec, ctrl, d_world, d_agent, world_opt, ctrl_
 del env
 
 tb_log_dir = f"logs/test_dreamer/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-# tensorboard = SummaryWriter(tb_log_dir)
 
 
 def world_training_step(model, env):
@@ -139,23 +138,33 @@ def test_collect_experiences(num_steps):
 
 
 def test_world_training_step():
+    tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_world_training_step"))
     env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
     model = Dreamer(*args, num_collect_experience_steps=128)
+    model.tensorboard = tensorboard
+    model.log_every_n_steps = 1
     loss_dict, experience = world_training_step(model, env)
     assert experience.get("hiddens") is not None
     assert experience.get("states") is not None
     assert loss_dict.get("loss") is not None
+
     del env
+    tensorboard.close()
 
 
 def test_controller_training_step():
     # World Training Step
+    tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_controller_training_step"))
     env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
     model = Dreamer(*args, imagination_horizon=4)
+    model.tensorboard = tensorboard
+    model.current_step = 1
     _, experience = world_training_step(model, env)
     loss_dict, _ = model.controller_training_step(experience)
     assert loss_dict.get("loss") is not None
+
     del env
+    tensorboard.close()
 
 
 def test_evaluation_step():

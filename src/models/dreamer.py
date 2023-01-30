@@ -273,12 +273,20 @@ class Dreamer(nn.Module):
             "rec_loss": rec_loss,
             "rec_voc_state_loss": rec_voc_state_loss,
             "rec_generated_sound_loss": rec_generated_sound_loss,
-            "kl_div_loss": kl_div_loss,
+            "kl_div_loss": all_kl_div_loss,
             "over_free_nat": not all_kl_div_loss.item() < self.free_nats,
         }
 
         experiences["hiddens"] = all_hiddens
         experiences["states"] = all_states
+
+        prefix = "world_training_step/"
+        self.log(prefix + "loss", loss)
+        self.log(prefix + "reconstruction loss", rec_loss)
+        self.log(prefix + "reconstructed vocal state loss", rec_voc_state_loss)
+        self.log(prefix + "reconstructed generated sound loss", rec_generated_sound_loss)
+        self.log(prefix + "kl divergence loss", all_kl_div_loss)
+        self.log(prefix + "is over free nat", float(all_kl_div_loss.item() > self.free_nats))
 
         return loss_dict, experiences
 
