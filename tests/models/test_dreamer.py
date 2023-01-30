@@ -1,4 +1,5 @@
 import glob
+import os
 import pathlib
 from functools import partial
 
@@ -10,6 +11,7 @@ from pynktrombonegym.spaces import ObservationSpaceNames as OSN
 from pynktrombonegym.wrappers import ActionByAcceleration as ABA
 from pynktrombonegym.wrappers import Log1pMelSpectrogram as L1MS
 from torch.optim import SGD
+from torch.utils.tensorboard import SummaryWriter
 
 from src.datamodules import buffer_names
 from src.datamodules.replay_buffer import ReplayBuffer
@@ -72,6 +74,9 @@ bf_space = {
 }
 args = (trans, prior, obs_enc, obs_dec, ctrl, d_world, d_agent, world_opt, ctrl_opt)
 del env
+
+tb_log_dir = "logs/test_dreamer"
+# tensorboard = SummaryWriter(tb_log_dir)
 
 
 def world_training_step(model, env):
@@ -175,3 +180,30 @@ def test_configure_replay_buffer():
     for name, box in rb.spaces.items():
         assert box == spaces.get(name), f"space {name} isn't set properly(box:{box}"
     del env
+
+
+def test_log():
+    test_log_tb = SummaryWriter(os.path.join(tb_log_dir, "test_log"))
+    model = Dreamer(*args)
+    model.tensorboard = test_log_tb
+    model.current_step = 0
+    model.log_every_n_steps = 1
+
+    # Log every step.
+    for i in range(10):
+        model.current_step = i
+        model.log("test_log_every_1_steps", i)
+
+    # Log every 2 steps.
+    model.log_every_n_steps = 2
+    model.current_step = 0
+    for i in range(10):
+        model.current_step = i
+        model.log("test_log_every_2_steps", i * 2)
+
+    # Force logging
+    model.log_every_n_steps = 1000000
+    model.current_step = 0
+    for i in range(10):
+        model.current_step = i
+        model.log("test force logging", -i, force_logging=True)

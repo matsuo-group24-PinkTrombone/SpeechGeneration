@@ -34,6 +34,8 @@ class Dreamer(nn.Module):
     device: torch.device = "cpu"
     dtype: torch.dtype = torch.float32
     tensorboard: SummaryWriter
+    log_every_n_steps: int = 1
+
     def __init__(
         self,
         transition: Transition,
@@ -418,3 +420,16 @@ class Dreamer(nn.Module):
         }
 
         return loss_dict
+
+    def log(self, name: str, value: Any, force_logging: bool = False) -> None:
+        """Log scalar value to tensorboard.
+
+        `log_every_n_steps` to reduce log data volume.
+        Args:
+            name (str): Log value name.
+            value (Any): scalar value.
+            force_logging (bool): If True, Force tensorboard to log.
+        """
+
+        if force_logging or self.current_step % self.log_every_n_steps == 0:
+            self.tensorboard.add_scalar(name, value, self.current_step)
