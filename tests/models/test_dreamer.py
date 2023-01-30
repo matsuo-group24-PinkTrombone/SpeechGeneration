@@ -158,7 +158,7 @@ def test_controller_training_step():
     env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
     model = Dreamer(*args, imagination_horizon=4)
     model.tensorboard = tensorboard
-    model.current_step = 1
+    model.log_every_n_steps = 1
     _, experience = world_training_step(model, env)
     loss_dict, _ = model.controller_training_step(experience)
     assert loss_dict.get("loss") is not None
