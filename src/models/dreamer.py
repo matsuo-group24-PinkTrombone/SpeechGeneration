@@ -349,6 +349,9 @@ class Dreamer(nn.Module):
 
         loss_dict = {"loss": loss}
 
+        prefix = "controller_training_step/"
+        self.log(prefix + "loss", loss)
+
         return loss_dict, experiences
 
     @torch.no_grad()
