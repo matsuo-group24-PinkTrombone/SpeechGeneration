@@ -1,4 +1,5 @@
 from functools import partial
+from tempfile import NamedTemporaryFile
 
 import pytest
 import torch
@@ -45,8 +46,6 @@ c_opt = partial(SGD, lr=1e-3)
 
 dreamer_args = (trans, prior, obs_enc, obs_dec, ctrl, world, agent, w_opt, c_opt)
 
-save_path = "tests/sample_model/sample.pt"
-
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test__init__(device):
@@ -83,6 +82,7 @@ def test_fit(device):
     trainer.fit(env, rb, dreamer)
     del env
 
+
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_save_checkpoint(device):
     dreamer = Dreamer(*dreamer_args)
@@ -90,11 +90,15 @@ def test_save_checkpoint(device):
     rb = dreamer.configure_replay_buffer(env, buffer_size=4)
     trainer = Trainer(device=device, collect_experience_interval=2)
     wopt, copt = dreamer.configure_optimizers()
-    trainer.save_checkpoint(save_path, dreamer, wopt, copt)
+    ckpt = NamedTemporaryFile()
+    trainer.save_checkpoint(ckpt.name, dreamer, wopt, copt)
+
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_load_checkpoint(device):
     trainer = Trainer(device=device, collect_experience_interval=2)
     dreamer = Dreamer(*dreamer_args)
     wopt, copt = dreamer.configure_optimizers()
-    trainer.load_checkpoint(save_path, dreamer, wopt, copt)
+    ckpt = NamedTemporaryFile()
+    trainer.save_checkpoint(ckpt.name, dreamer, wopt, copt)
+    trainer.load_checkpoint(ckpt.name, dreamer, wopt, copt)
