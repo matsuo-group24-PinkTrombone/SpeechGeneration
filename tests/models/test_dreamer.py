@@ -168,12 +168,18 @@ def test_controller_training_step():
 
 
 def test_evaluation_step():
-    env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
-    model = Dreamer(*args)
+    sample_rate = 44100
+    tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_evalution_step"))
+    env = AVS(AA(NAR(ABA(L1MS(target_files, sample_rate=sample_rate), action_scaler=1.0))))
+    model = Dreamer(*args, sample_rate=sample_rate)
+    model.tensorboard = tensorboard
+    model.log_every_n_steps = 1
     loss_dict = model.evaluation_step(env)
     assert loss_dict.get("target_generated_mse") is not None
     assert loss_dict.get("target_generated_mae") is not None
+
     del env
+    model.tensorboard.close()
 
 
 def test_configure_replay_buffer():

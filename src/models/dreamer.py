@@ -51,7 +51,8 @@ class Dreamer(nn.Module):
         num_collect_experience_steps: int = 100,
         imagination_horizon: int = 32,
         evaluation_steps: int = 44 * 60,
-        evaluation_blank_length: int = 22050,
+        evaluation_blank_length: int = 44100,
+        sample_rate: int = 44100,
     ) -> None:
         """
         Args:
@@ -70,6 +71,7 @@ class Dreamer(nn.Module):
             imagination_horizon: Specifies the number of state transitions that controller needs for learning.
             evaluation_steps: Specifies the number of evaluations.
             evaluation_blank_length (int):The blank lengths of generated/target sound.
+            sample_rate (int): The generation sampling rate of Vocal Tract Model.
         """
 
         super().__init__()
@@ -97,6 +99,7 @@ class Dreamer(nn.Module):
         self.imagination_horizon = imagination_horizon
         self.evaluation_steps = evaluation_steps
         self.evaluation_blank_length = evaluation_blank_length
+        self.sample_rate = sample_rate
 
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
@@ -422,8 +425,18 @@ class Dreamer(nn.Module):
         target_sounds_for_log = np.concatenate(target_sound_waves)
 
         # logging to tensorboard
-        generated_sounds_for_log
-        target_sounds_for_log
+        prefix = "evaluation_step/"
+        self.tensorboard.add_audio(
+            prefix + "generated sounds",
+            generated_sounds_for_log,
+            self.current_step,
+            self.sample_rate,
+        )
+        self.tensorboard.add_audio(
+            prefix + "target sounds", target_sounds_for_log, self.current_step, self.sample_rate
+        )
+        self.log(prefix + "target generated mse", float(target_generated_mse), True)
+        self.log(prefix + "target generated mae", float(target_generated_mae), True)
 
         loss_dict = {
             "target_generated_mse": target_generated_mse,
