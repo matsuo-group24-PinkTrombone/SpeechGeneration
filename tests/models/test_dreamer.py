@@ -1,5 +1,7 @@
 import glob
+import os
 import pathlib
+from datetime import datetime
 from functools import partial
 
 import numpy as np
@@ -10,6 +12,7 @@ from pynktrombonegym.spaces import ObservationSpaceNames as OSN
 from pynktrombonegym.wrappers import ActionByAcceleration as ABA
 from pynktrombonegym.wrappers import Log1pMelSpectrogram as L1MS
 from torch.optim import SGD
+from torch.utils.tensorboard import SummaryWriter
 
 from src.datamodules import buffer_names
 from src.datamodules.replay_buffer import ReplayBuffer
@@ -73,6 +76,8 @@ bf_space = {
 args = (trans, prior, obs_enc, obs_dec, ctrl, d_world, d_agent, world_opt, ctrl_opt)
 del env
 
+tb_log_dir = f"logs/test_dreamer/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+
 
 def world_training_step(model, env):
     rb = ReplayBuffer(bf_space, bf_size)
@@ -133,32 +138,48 @@ def test_collect_experiences(num_steps):
 
 
 def test_world_training_step():
+    tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_world_training_step"))
     env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
     model = Dreamer(*args, num_collect_experience_steps=128)
+    model.tensorboard = tensorboard
+    model.log_every_n_steps = 1
     loss_dict, experience = world_training_step(model, env)
     assert experience.get("hiddens") is not None
     assert experience.get("states") is not None
     assert loss_dict.get("loss") is not None
+
     del env
+    tensorboard.close()
 
 
 def test_controller_training_step():
     # World Training Step
+    tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_controller_training_step"))
     env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
     model = Dreamer(*args, imagination_horizon=4)
+    model.tensorboard = tensorboard
+    model.log_every_n_steps = 1
     _, experience = world_training_step(model, env)
     loss_dict, _ = model.controller_training_step(experience)
     assert loss_dict.get("loss") is not None
+
     del env
+    tensorboard.close()
 
 
 def test_evaluation_step():
-    env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
-    model = Dreamer(*args)
+    sample_rate = 44100
+    tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_evalution_step"))
+    env = AVS(AA(NAR(ABA(L1MS(target_files, sample_rate=sample_rate), action_scaler=1.0))))
+    model = Dreamer(*args, sample_rate=sample_rate)
+    model.tensorboard = tensorboard
+    model.log_every_n_steps = 1
     loss_dict = model.evaluation_step(env)
     assert loss_dict.get("target_generated_mse") is not None
     assert loss_dict.get("target_generated_mae") is not None
+
     del env
+    model.tensorboard.close()
 
 
 def test_configure_replay_buffer():
@@ -175,3 +196,30 @@ def test_configure_replay_buffer():
     for name, box in rb.spaces.items():
         assert box == spaces.get(name), f"space {name} isn't set properly(box:{box}"
     del env
+
+
+def test_log():
+    test_log_tb = SummaryWriter(os.path.join(tb_log_dir, "test_log"))
+    model = Dreamer(*args)
+    model.tensorboard = test_log_tb
+    model.current_step = 0
+    model.log_every_n_steps = 1
+
+    # Log every step.
+    for i in range(10):
+        model.current_step = i
+        model.log("test_log_every_1_steps", i)
+
+    # Log every 2 steps.
+    model.log_every_n_steps = 2
+    model.current_step = 0
+    for i in range(10):
+        model.current_step = i
+        model.log("test_log_every_2_steps", i * 2)
+
+    # Force logging
+    model.log_every_n_steps = 1000000
+    model.current_step = 0
+    for i in range(10):
+        model.current_step = i
+        model.log("test force logging", -i, force_logging=True)

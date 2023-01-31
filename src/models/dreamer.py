@@ -34,6 +34,8 @@ class Dreamer(nn.Module):
     device: torch.device = "cpu"
     dtype: torch.dtype = torch.float32
     tensorboard: SummaryWriter
+    log_every_n_steps: int = 1  # intervals for logging
+
     def __init__(
         self,
         transition: Transition,
@@ -49,7 +51,8 @@ class Dreamer(nn.Module):
         num_collect_experience_steps: int = 100,
         imagination_horizon: int = 32,
         evaluation_steps: int = 44 * 60,
-        evaluation_blank_length: int = 22050,
+        evaluation_blank_length: int = 44100,
+        sample_rate: int = 44100,
     ) -> None:
         """
         Args:
@@ -68,6 +71,7 @@ class Dreamer(nn.Module):
             imagination_horizon: Specifies the number of state transitions that controller needs for learning.
             evaluation_steps: Specifies the number of evaluations.
             evaluation_blank_length (int):The blank lengths of generated/target sound.
+            sample_rate (int): The generation sampling rate of Vocal Tract Model.
         """
 
         super().__init__()
@@ -95,6 +99,7 @@ class Dreamer(nn.Module):
         self.imagination_horizon = imagination_horizon
         self.evaluation_steps = evaluation_steps
         self.evaluation_blank_length = evaluation_blank_length
+        self.sample_rate = sample_rate
 
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
@@ -271,12 +276,20 @@ class Dreamer(nn.Module):
             "rec_loss": rec_loss,
             "rec_voc_state_loss": rec_voc_state_loss,
             "rec_generated_sound_loss": rec_generated_sound_loss,
-            "kl_div_loss": kl_div_loss,
+            "kl_div_loss": all_kl_div_loss,
             "over_free_nat": not all_kl_div_loss.item() < self.free_nats,
         }
 
         experiences["hiddens"] = all_hiddens
         experiences["states"] = all_states
+
+        prefix = "world_training_step/"
+        self.log(prefix + "loss", loss)
+        self.log(prefix + "reconstruction loss", rec_loss)
+        self.log(prefix + "reconstructed vocal state loss", rec_voc_state_loss)
+        self.log(prefix + "reconstructed generated sound loss", rec_generated_sound_loss)
+        self.log(prefix + "kl divergence loss", all_kl_div_loss)
+        self.log(prefix + "is over free nat", float(all_kl_div_loss.item() > self.free_nats))
 
         return loss_dict, experiences
 
@@ -338,6 +351,9 @@ class Dreamer(nn.Module):
         loss /= self.imagination_horizon
 
         loss_dict = {"loss": loss}
+
+        prefix = "controller_training_step/"
+        self.log(prefix + "loss", loss)
 
         return loss_dict, experiences
 
@@ -409,8 +425,18 @@ class Dreamer(nn.Module):
         target_sounds_for_log = np.concatenate(target_sound_waves)
 
         # logging to tensorboard
-        generated_sounds_for_log
-        target_sounds_for_log
+        prefix = "evaluation_step/"
+        self.tensorboard.add_audio(
+            prefix + "generated sounds",
+            generated_sounds_for_log,
+            self.current_step,
+            self.sample_rate,
+        )
+        self.tensorboard.add_audio(
+            prefix + "target sounds", target_sounds_for_log, self.current_step, self.sample_rate
+        )
+        self.log(prefix + "target generated mse", float(target_generated_mse), True)
+        self.log(prefix + "target generated mae", float(target_generated_mae), True)
 
         loss_dict = {
             "target_generated_mse": target_generated_mse,
@@ -418,3 +444,16 @@ class Dreamer(nn.Module):
         }
 
         return loss_dict
+
+    def log(self, name: str, value: Any, force_logging: bool = False) -> None:
+        """Log scalar value to tensorboard.
+
+        `log_every_n_steps` to reduce log data volume.
+        Args:
+            name (str): Log value name.
+            value (Any): scalar value.
+            force_logging (bool): If True, Force tensorboard to log.
+        """
+
+        if force_logging or self.current_step % self.log_every_n_steps == 0:
+            self.tensorboard.add_scalar(name, value, self.current_step)
