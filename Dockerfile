@@ -3,9 +3,11 @@ FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime
 ADD ./ /workspace
 
 RUN apt-get update && apt-get install -y \
+  curl \
   ffmpeg \
   git \
   make \
+  unzip \
   && rm -rf /var/lib/apt/lists/*
 
 COPY ./scripts/docker-entrypoint.sh /usr/local/bin/entrypoint.sh
