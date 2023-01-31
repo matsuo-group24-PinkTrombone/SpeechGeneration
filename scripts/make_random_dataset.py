@@ -8,15 +8,15 @@ from typing import Callable
 import gym
 import numpy as np
 import soundfile
-import tqdm
 from pynktrombonegym.spaces import ObservationSpaceNames as OSN
 from pynktrombonegym.wrappers import ActionByAcceleration, Log1pMelSpectrogram
+from tqdm.contrib.concurrent import process_map
 
 target_sound_files = glob.glob("data/sample_target_sounds/*.wav")
 sound_seconds_range = (2.0, 3.0)
 data_dir = pathlib.Path(__file__).parent.parent.joinpath("data")
-output_dir = "generated_randomly"
-sample_dir = "sample_generated_randomly"
+output_dir = data_dir / "generated_randomly"
+sample_dir = data_dir / "sample_generated_randomly"
 
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
@@ -69,19 +69,22 @@ if __name__ == "__main__":
         return e.action_space.sample()
 
     num_repeat = math.ceil(10 * 60**2 / 2.5)
-    # generate sounds for test
-    for i in range(5):
-        generate_sound(
-            wrapped,
-            action_fn,
-            f"{sample_dir}/{i}.wav",
-            env.generate_chunk,
-            env.sample_rate,
-        )
 
-    # generate sounds for dataset
-    for i in tqdm.tqdm(range(num_repeat)):
+    def runner(i: int) -> None:
+        wrapped.reset(seed=None)
         generate_sound(
             wrapped, action_fn, f"{output_dir}/{i + 1}.wav", env.generate_chunk, env.sample_rate
         )
+
+    # generate sounds for test
+    print("generate sounds for test.")
+    for i in range(5):
+        runner(i)
+
+    # generate sounds for dataset
+    print("Start generation.")
+    process_map(runner, range(num_repeat), max_workers=os.cpu_count(), chunksize=10)
+
     wrapped.close()  # you must call.
+    env.close()
+    del env, wrapped
