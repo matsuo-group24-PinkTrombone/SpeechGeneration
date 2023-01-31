@@ -3,7 +3,7 @@ import glob
 import pytest
 from pydub import AudioSegment
 
-target_sample_files = "data/sample_generated_sounds/*.wav"
+target_sample_files = "data/sample_generated_randomly/*.wav"
 
 test_files = glob.glob(target_sample_files)
 
