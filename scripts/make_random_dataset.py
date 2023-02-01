@@ -14,14 +14,14 @@ from tqdm.contrib.concurrent import process_map
 
 target_sound_files = glob.glob("data/sample_target_sounds/*.wav")
 sound_seconds_range = (2.0, 3.0)
-data_dir = pathlib.Path(__file__).parent.parent.joinpath("data")
+data_dir = pathlib.Path(__file__).parents[1].joinpath("data")
 output_dir = data_dir / "generated_randomly"
 sample_dir = data_dir / "sample_generated_randomly"
 
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
-if not os.path.exists(sample_dir):
-    os.makedirs(sample_dir)
+if not output_dir.exists():
+    output_dir.mkdir(parents=True)
+if not sample_dir.exists():
+    sample_dir.mkdir(parents=True)
 
 
 def generate_sound(
