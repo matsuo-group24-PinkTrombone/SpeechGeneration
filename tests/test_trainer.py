@@ -87,7 +87,6 @@ def test_fit(device):
 def test_save_checkpoint(device):
     dreamer = Dreamer(*dreamer_args)
     env = make_env(["data/sample_target_sounds"])
-    rb = dreamer.configure_replay_buffer(env, buffer_size=4)
     trainer = Trainer(device=device, collect_experience_interval=2)
     wopt, copt = dreamer.configure_optimizers()
     ckpt = NamedTemporaryFile()

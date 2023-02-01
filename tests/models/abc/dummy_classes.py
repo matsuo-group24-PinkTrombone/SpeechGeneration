@@ -141,5 +141,6 @@ class DummyAgent(Agent):
     """Dummy agent model interface class for testing."""
 
     def explore(self, obs: tuple[Tensor, Tensor], target: Tensor) -> Tensor:
+        obs = torch.rand((8,))
         action = self.act(obs, target, True)
         return action
