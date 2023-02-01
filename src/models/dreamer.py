@@ -257,10 +257,10 @@ class Dreamer(nn.Module):
             all_kl_div_loss += kl_div_loss.sum(-1).mean()
             rec_voc_state_loss += F.mse_loss(voc_stat, rec_voc_stat)
             rec_generated_sound_loss += F.mse_loss(gened_sound, rec_gened_sound)
-
             # next step
-            next_state[dones[idx]] = 0.0  # Initialize with zero.
-            next_hidden[dones[idx]] = 0.0  # Initialize with zero.
+            is_done = dones[idx].reshape(-1)
+            next_state[is_done] = 0.0  # Initialize with zero.
+            next_hidden[is_done] = 0.0  # Initialize with zero.
 
             state = next_state
             hidden = next_hidden

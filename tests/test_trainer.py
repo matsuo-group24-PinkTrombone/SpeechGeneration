@@ -88,7 +88,7 @@ def test_setup_model_attribute(device):
     del log_dir
 
 
-@pytest.mark.parametrize("device", ["cpu"])
+@pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_fit(device):
     log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
     env = make_env(["data/sample_target_sounds"])

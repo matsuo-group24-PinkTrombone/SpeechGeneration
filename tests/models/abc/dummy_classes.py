@@ -25,7 +25,7 @@ class DummyTransition(Transition):
         self.dmy_lyr = Linear(8, 16)
 
     def forward(self, hidden: Tensor, state: Tensor, action: Tensor) -> Tensor:
-        return torch.randn(hidden.shape)
+        return torch.randn(hidden.shape, requires_grad=True)
 
     @property
     def hidden_shape(self) -> tuple[int]:
@@ -65,7 +65,7 @@ class DummyObservationEncoder(ObservationEncoder):
     def embed_observation(self, obs: tuple[Tensor, Tensor]) -> Tensor:
         v, g = obs
         shape = (v.size(0), *self.embedded_obs_shape)
-        return torch.randn(shape).type_as(v)
+        return torch.randn(shape, requires_grad=True).type_as(v)
 
     def encode(self, hidden: Tensor, embedded_obs: Tensor) -> Normal:
         shape = (hidden.size(0), *self.state_shape)
@@ -96,7 +96,7 @@ class DummyObservationDecoder(ObservationDecoder):
     def forward(self, hidden: Tensor, state: Tensor) -> Tensor:
         vs_shape = (hidden.size(0), *self._voc_state_shape)
         gs_shape = (hidden.size(0), *self._generated_sound_shape)
-        return torch.randn(vs_shape).type_as(hidden), torch.randn(gs_shape).type_as(hidden)
+        return torch.randn(vs_shape, requires_grad=True).type_as(hidden), torch.randn(gs_shape, requires_grad=True).type_as(hidden)
 
 
 class DummyController(Controller):
@@ -124,7 +124,7 @@ class DummyController(Controller):
         probabilistic: bool,
     ) -> tuple[Tensor, Tensor]:
         shape = (hidden.size(0), *self._action_shape)
-        return torch.rand(shape) * 2 + 0.5, torch.randn_like(controller_hidden)
+        return torch.rand(shape, requires_grad=True) * 2 + 0.5, torch.randn_like(controller_hidden, requires_grad=True)
 
     @property
     def controller_hidden_shape(self) -> tuple[int]:
@@ -140,7 +140,10 @@ class DummyWorld(World):
 class DummyAgent(Agent):
     """Dummy agent model interface class for testing."""
 
+    def __init__(self, action_shape: tuple[int], *args, **kwds):
+        super().__init__(*args, **kwds)
+        self.action_shape = action_shape
+
     def explore(self, obs: tuple[Tensor, Tensor], target: Tensor) -> Tensor:
-        obs = torch.rand((8,))
-        action = self.act(obs, target, True)
+        action = torch.rand(self.action_shape, requires_grad=True)
         return action
