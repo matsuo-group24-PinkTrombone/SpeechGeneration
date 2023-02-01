@@ -34,6 +34,7 @@ class Dreamer(nn.Module):
     device: torch.device = "cpu"
     dtype: torch.dtype = torch.float32
     tensorboard: SummaryWriter
+
     def __init__(
         self,
         transition: Transition,
