@@ -345,6 +345,7 @@ class Dreamer(nn.Module):
 
             hidden = next_hidden
 
+            controller_hidden[dones[indices, batch_arange]] = 0.0
             hidden[dones[indices, batch_arange]] = old_hiddens[indices + 1, batch_arange]
             state = self.prior.forward(hidden)
 
