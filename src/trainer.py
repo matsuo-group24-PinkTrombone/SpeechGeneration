@@ -67,9 +67,7 @@ class Trainer:
             model.current_step = current_step
 
             logger.debug("Collecting experiences...")
-            replay_buffer = model.collect_experiences(
-                env, replay_buffer, self.num_collect_experience_steps
-            )
+            replay_buffer = model.collect_experiences(env, replay_buffer)
             logger.debug("Collected experiences.")
 
             for collect_interval in range(self.collect_experience_interval):
