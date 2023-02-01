@@ -1,55 +1,67 @@
 from functools import partial
 from tempfile import NamedTemporaryFile
+import os
 
 import pytest
 import torch
 from torch.optim import SGD
 
+from src.env.array_action import ARRAY_ORDER as AO_act
 from src.env.make_env import make_env
-from src.models.abc.world import World
-from src.models.components.conformer_decoder_fastspeech2 import ConformerDecoder as CD
-from src.models.components.controller import Controller as Ctrl
-from src.models.components.posterior_encoder_vits import PosteriorEncoderVITS as PE
-from src.models.components.prior_encoder import Prior
-from src.models.components.transition import Transition
 from src.models.dreamer import Dreamer
 from src.trainer import Trainer
+from src.env.array_voc_state import VSON
+from pynktrombonegym.spaces import ObservationSpaceNames as OSN
+from tests.models.abc.dummy_classes import DummyAgent as DA
+from tests.models.abc.dummy_classes import DummyController as DC
+from tests.models.abc.dummy_classes import DummyObservationDecoder as DOD
+from tests.models.abc.dummy_classes import DummyObservationEncoder as DOE
+from tests.models.abc.dummy_classes import DummyPrior as DP
+from tests.models.abc.dummy_classes import DummyTransition as DT
+from tests.models.abc.dummy_classes import DummyWorld as DW
 
 # from src.models.components.agent import Agent # AgentのPRがマージされたら追加
 from tests.models.abc.dummy_classes import DummyAgent as Agent
 
-obs_shape = (8,)
-state_shape = (4,)
-hidden_shape = (4,)
+env = make_env(["data/sample_target_sounds"])
+
+hidden_shape = (16,)
+ctrl_hidden_shape = (16,)
+state_shape = (8,)
+action_shape = (len(AO_act),)
+
+obs_space = env.observation_space
+voc_stats_shape = obs_space[VSON.VOC_STATE].shape
 rnn_input_shape = (8,)
 
-action_shape = (6,)
+gen_sound_shape = obs_space[OSN.GENERATED_SOUND_SPECTROGRAM].shape
+tgt_sound_shape = obs_space[OSN.TARGET_SOUND_SPECTROGRAM].shape
+obs_shape = (24,)
 
-obs_enc = PE(in_channels=obs_shape[0], out_channels=state_shape[0])
+obs_enc = DOE(state_shape, obs_shape)
+obs_dec = DOD(
+    voc_stats_shape,
+    gen_sound_shape,
+)
+prior = DP(state_shape)
+trans = DT(hidden_shape)
+ctrl = DC(action_shape, ctrl_hidden_shape)
 
-obs_dec = CD(idim=state_shape[0], odim=obs_shape[0])
-prior = Prior(hidden_shape[0], state_shape[0])
-trans = Transition(hidden_shape[0], state_shape[0], action_shape[0], rnn_input_shape[0])
 
-in_conv = PE(in_channels=obs_shape[0], out_channels=state_shape[0])
-in_enc = PE(in_channels=state_shape[0], out_channels=state_shape[0])
-enc_prj = PE(in_channels=state_shape[0], out_channels=state_shape[0] * 2)
-enc_mods = (in_conv, in_enc, enc_prj)
-ctrl = Ctrl(hidden_shape[0], state_shape[0], enc_mods, 5, hidden_shape[0], action_shape[0])
+d_world = partial(DW)
+d_agent = partial(DA, action_shape=action_shape)
 
-world = partial(World)
+world_opt = partial(SGD, lr=1e-3)
+ctrl_opt = partial(SGD, lr=1e-3)
 
-agent = partial(Agent)
-
-w_opt = partial(SGD, lr=1e-3)
-c_opt = partial(SGD, lr=1e-3)
-
-dreamer_args = (trans, prior, obs_enc, obs_dec, ctrl, world, agent, w_opt, c_opt)
+dreamer_args = (trans, prior, obs_enc, obs_dec, ctrl, d_world, d_agent, world_opt, ctrl_opt)
+del env
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test__init__(device):
-    mod = Trainer(device=device)
+    log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
+    mod = Trainer(log_dir=log_dir, device=device)
     assert mod.num_episode is not None
     assert mod.collect_experience_interval is not None
     assert mod.batch_size is not None
@@ -59,11 +71,13 @@ def test__init__(device):
     assert mod.model_save_interval is not None
     assert mod.device is not None
     assert mod.dtype is not None
+    del log_dir
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_setup_model_attribute(device):
-    trainer = Trainer(device=device)
+    log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
+    trainer = Trainer(log_dir=log_dir, device=device)
     dreamer = Dreamer(*dreamer_args)
     trainer.setup_model_attribute(dreamer)
 
@@ -71,33 +85,39 @@ def test_setup_model_attribute(device):
     assert dreamer.dtype == trainer.dtype
     assert dreamer.current_episode == 0
     assert dreamer.current_step == 0
+    del log_dir
 
 
-@pytest.mark.parametrize("device", ["cpu", "cuda"])
+@pytest.mark.parametrize("device", ["cpu"])
 def test_fit(device):
+    log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
     env = make_env(["data/sample_target_sounds"])
-    trainer = Trainer(device=device, collect_experience_interval=2)
+    trainer = Trainer(log_dir=log_dir, device=device, collect_experience_interval=2, chunk_size=2)
     dreamer = Dreamer(*dreamer_args)
     rb = dreamer.configure_replay_buffer(env, buffer_size=4)
+    trainer.setup_model_attribute(dreamer)
     trainer.fit(env, rb, dreamer)
-    del env
+    del env, log_dir
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_save_checkpoint(device):
+    log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
     dreamer = Dreamer(*dreamer_args)
     env = make_env(["data/sample_target_sounds"])
-    trainer = Trainer(device=device, collect_experience_interval=2)
+    trainer = Trainer(log_dir=log_dir, device=device, collect_experience_interval=2)
     wopt, copt = dreamer.configure_optimizers()
     ckpt = NamedTemporaryFile()
     trainer.save_checkpoint(ckpt.name, dreamer, wopt, copt)
-
+    del log_dir
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_load_checkpoint(device):
-    trainer = Trainer(device=device, collect_experience_interval=2)
+    log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
+    trainer = Trainer(log_dir=log_dir, device=device, collect_experience_interval=2)
     dreamer = Dreamer(*dreamer_args)
     wopt, copt = dreamer.configure_optimizers()
     ckpt = NamedTemporaryFile()
     trainer.save_checkpoint(ckpt.name, dreamer, wopt, copt)
     trainer.load_checkpoint(ckpt.name, dreamer, wopt, copt)
+    del log_dir

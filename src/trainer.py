@@ -11,7 +11,7 @@ from .datamodules import buffer_names
 from .datamodules.replay_buffer import ReplayBuffer
 from .env.array_voc_state import VocStateObsNames as ObsNames
 from .models.dreamer import Dreamer
-
+from torch.utils.tensorboard import SummaryWriter
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +26,7 @@ class Trainer:
 
     def __init__(
         self,
+        log_dir:str,
         num_episode: int = 1,
         collect_experience_interval: int = 100,
         batch_size: int = 8,
@@ -67,7 +68,7 @@ class Trainer:
             model.current_step = current_step
 
             logger.debug("Collecting experiences...")
-            replay_buffer = model.collect_experiences(env, replay_buffer)
+            model.collect_experiences(env, replay_buffer)
             logger.debug("Collected experiences.")
 
             for collect_interval in range(self.collect_experience_interval):
@@ -128,6 +129,7 @@ class Trainer:
         model.dtype = self.dtype
         model.current_episode = 0
         model.current_step = 0
+        model.tensorboard = SummaryWriter(log_dir=self.log_dir)
 
     def save_checkpoint(
         self, path: Any, model: Dreamer, world_optim: Optimizer, controller_optim: Optimizer
