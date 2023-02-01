@@ -132,8 +132,8 @@ class Dreamer(nn.Module):
         """
         action_box = env.action_space
         vocal_state_box = env.observation_space[VSON.VOC_STATE]
-        target_sound_box = env.observation_space[VSON.TARGET_SOUND_WAVE]
-        generated_sound_box = env.observation_space[VSON.GENERATED_SOUND_WAVE]
+        target_sound_box = env.observation_space[VSON.TARGET_SOUND_SPECTROGRAM]
+        generated_sound_box = env.observation_space[VSON.GENERATED_SOUND_SPECTROGRAM]
         spaces = {}
         spaces[buffer_names.ACTION] = action_box
         spaces[buffer_names.VOC_STATE] = vocal_state_box

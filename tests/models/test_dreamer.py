@@ -189,8 +189,8 @@ def test_configure_replay_buffer():
     spaces = {
         buffer_names.VOC_STATE: env.observation_space[VSON.VOC_STATE],
         buffer_names.ACTION: env.action_space,
-        buffer_names.TARGET_SOUND: env.observation_space[VSON.TARGET_SOUND_WAVE],
-        buffer_names.GENERATED_SOUND: env.observation_space[VSON.GENERATED_SOUND_WAVE],
+        buffer_names.TARGET_SOUND: env.observation_space[VSON.TARGET_SOUND_SPECTROGRAM],
+        buffer_names.GENERATED_SOUND: env.observation_space[VSON.GENERATED_SOUND_SPECTROGRAM],
         buffer_names.DONE: Box(0, 1, shape=(1,), dtype=bool),
     }
     for name, box in rb.spaces.items():
