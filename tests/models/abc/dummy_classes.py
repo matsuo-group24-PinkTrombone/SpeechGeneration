@@ -64,8 +64,8 @@ class DummyObservationEncoder(ObservationEncoder):
         return torch.randn(shape).type_as(v)
 
     def encode(self, hidden: Tensor, embedded_obs: Tensor) -> Normal:
-        shape = (hidden.size(0), *self.state_shape)
-        mean = torch.zeros(shape).type_as(hidden)
+        shape = (embedded_obs.size(0), *self.state_shape)
+        mean = torch.zeros(shape).type_as(embedded_obs)
         std = torch.ones_like(mean)
         return Normal(mean, std)
 
