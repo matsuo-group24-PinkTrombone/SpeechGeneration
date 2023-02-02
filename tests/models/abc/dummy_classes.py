@@ -17,7 +17,7 @@ from src.models.abc.transition import Transition
 from src.models.abc.world import World
 
 
-class DummyTransition(Transition, ):
+class DummyTransition(Transition):
     """Dummy transition model class for testing."""
 
     def __init__(self, hidden_shape: tuple[int], *args: Any, **kwds: Any) -> None:
@@ -33,7 +33,7 @@ class DummyTransition(Transition, ):
         return self._hidden_shape
 
 
-class DummyPrior(Prior, ):
+class DummyPrior(Prior):
     """Dummy prior model class for testing."""
 
     def __init__(self, state_shape: tuple[int], *args: Any, **kwds: Any) -> None:
@@ -52,7 +52,7 @@ class DummyPrior(Prior, ):
         return self._state_shape
 
 
-class DummyObservationEncoder(ObservationEncoder, ):
+class DummyObservationEncoder(ObservationEncoder):
     """Dummy observation encoder model class for testing."""
 
     def __init__(
@@ -79,7 +79,7 @@ class DummyObservationEncoder(ObservationEncoder, ):
         return self._state_shape
 
 
-class DummyObservationDecoder(ObservationDecoder, ):
+class DummyObservationDecoder(ObservationDecoder):
     """Dummy observation decoder model class for testing."""
 
     def __init__(
