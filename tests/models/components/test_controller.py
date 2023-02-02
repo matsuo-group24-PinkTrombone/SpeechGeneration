@@ -38,7 +38,7 @@ def test_controller(
     encoder_modules = pos_enc_vits.get_encoder_modules()
 
     # controller instanse
-    input_size=100
+    input_size = 100
     controller = Controller(
         hidden_size=hidden_size,
         state_size=state_size,

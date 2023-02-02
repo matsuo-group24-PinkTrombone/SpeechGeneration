@@ -3,12 +3,14 @@ from typing import Tuple
 import torch
 from torch import Tensor
 
+# from .observation_auto_encoder import ObservationEncoder
+from tests.models.abc.dummy_classes import DummyObservationEncoder
+
 from ...utils.nets_utils import make_non_pad_mask
 from ..abc.controller import Controller as AbsController
 from .wavenet import WaveNet
 from .wavenet.residual_block import Conv1d
-# from .observation_auto_encoder import ObservationEncoder
-from tests.models.abc.dummy_classes import DummyObservationEncoder
+
 
 class Controller(AbsController):
     def __init__(
@@ -36,20 +38,22 @@ class Controller(AbsController):
         super().__init__()
         self.hidden_size = hidden_size
         self.state_size = state_size
-        self.encoder = DummyObservationEncoder(state_shape=(state_size,),embedded_obs_shape=(state_size,feats_T))
+        self.encoder = DummyObservationEncoder(
+            state_shape=(state_size,), embedded_obs_shape=(state_size, feats_T)
+        )
         self.c_hidden_size = c_hidden_size
         self.action_size = action_size
 
         self.state_emb = torch.nn.Linear(feats_T, 1)
-        self.fc_input_layer = torch.nn.Linear(hidden_size+state_size+state_size,input_size) # hidden + obs_state + target_state
+        self.fc_input_layer = torch.nn.Linear(
+            hidden_size + state_size + state_size, input_size
+        )  # hidden + obs_state + target_state
         self.rnn = torch.nn.GRUCell(
             input_size=input_size,
             hidden_size=c_hidden_size,
             bias=bias,
         )
-        self.proj = torch.nn.Sequential(
-            torch.nn.Linear(c_hidden_size, action_size*2)
-        )
+        self.proj = torch.nn.Sequential(torch.nn.Linear(c_hidden_size, action_size * 2))
 
     def forward(
         self,
@@ -68,7 +72,7 @@ class Controller(AbsController):
             probabilistic (bool):  If True, sample action from normal distribution.
         """
         # target encoding
-        target_state = self.encoder.encode(hidden=None,embedded_obs=target).sample()
+        target_state = self.encoder.encode(hidden=None, embedded_obs=target).sample()
 
         # RNN
         hidden_state = torch.cat((hidden, state), dim=1)
@@ -84,7 +88,7 @@ class Controller(AbsController):
             [controller_hidden.size(0), self.c_hidden_size]
         )
         if probabilistic:
-            action = (m + torch.randn_like(m) * torch.exp(logs))
+            action = m + torch.randn_like(m) * torch.exp(logs)
         else:
             action = m
 
