@@ -3,24 +3,20 @@ from typing import Tuple
 import torch
 from torch import Tensor
 
-# from .observation_auto_encoder import ObservationEncoder
-from tests.models.abc.dummy_classes import DummyObservationEncoder
-
-from ...utils.nets_utils import make_non_pad_mask
 from ..abc.controller import Controller as AbsController
-from .wavenet import WaveNet
-from .wavenet.residual_block import Conv1d
+from ..components.posterior_encoder_vits import PosteriorEncoderVITS
 
 
 class Controller(AbsController):
     def __init__(
         self,
+        encoder: PosteriorEncoderVITS,
         hidden_size: int,
         state_size: int,
-        feats_T: int,
         c_hidden_size: int,
         action_size: int,
         input_size: int,
+        feats_T: int,
         bias: bool = True,
     ):
         """
@@ -38,22 +34,24 @@ class Controller(AbsController):
         super().__init__()
         self.hidden_size = hidden_size
         self.state_size = state_size
-        self.encoder = DummyObservationEncoder(
-            state_shape=(state_size,), embedded_obs_shape=(state_size, feats_T)
-        )
+        self.encoder = encoder
+        self.feats_T = feats_T
         self.c_hidden_size = c_hidden_size
         self.action_size = action_size
 
-        self.state_emb = torch.nn.Linear(feats_T, 1)
+        self.fc_time_reduction = torch.nn.Linear(feats_T, 1)
+
         self.fc_input_layer = torch.nn.Linear(
             hidden_size + state_size + state_size, input_size
         )  # hidden + obs_state + target_state
+
         self.rnn = torch.nn.GRUCell(
             input_size=input_size,
             hidden_size=c_hidden_size,
             bias=bias,
         )
-        self.proj = torch.nn.Sequential(torch.nn.Linear(c_hidden_size, action_size * 2))
+        self.fc_mean = torch.nn.Sequential(torch.nn.Linear(c_hidden_size, action_size))
+        self.fc_logs = torch.nn.Sequential(torch.nn.Linear(c_hidden_size, action_size))
 
     def forward(
         self,
@@ -72,7 +70,10 @@ class Controller(AbsController):
             probabilistic (bool):  If True, sample action from normal distribution.
         """
         # target encoding
-        target_state = self.encoder.encode(hidden=None, embedded_obs=target).sample()
+        z, _m, _logs, x_mask = self.encoder(
+            target, torch.tensor([self.feats_T] * hidden.size(0), dtype=torch.float32)
+        )
+        target_state = self.fc_time_reduction(_m).squeeze(2)
 
         # RNN
         hidden_state = torch.cat((hidden, state), dim=1)
@@ -82,8 +83,8 @@ class Controller(AbsController):
         next_controller_hidden = self.rnn(rnn_input, controller_hidden)
 
         # action
-        stats = self.proj(next_controller_hidden)
-        m, logs = stats.split(stats.size(1) // 2, dim=1)
+        m = self.fc_mean(next_controller_hidden)
+        logs = self.fc_logs(next_controller_hidden)
         assert next_controller_hidden.size() == torch.Size(
             [controller_hidden.size(0), self.c_hidden_size]
         )

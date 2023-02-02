@@ -35,17 +35,17 @@ def test_controller(
     pos_enc_vits = PosteriorEncoderVITS(
         in_channels=target_mel_channels, hidden_channels=state_size, out_channels=state_size
     )
-    encoder_modules = pos_enc_vits.get_encoder_modules()
 
     # controller instanse
     input_size = 100
     controller = Controller(
+        encoder=pos_enc_vits,
         hidden_size=hidden_size,
         state_size=state_size,
-        feats_T=feats_T,
         c_hidden_size=c_hidden_size,
         action_size=action_size,
         input_size=input_size,
+        feats_T=feats_T,
         bias=True,
     )
 
