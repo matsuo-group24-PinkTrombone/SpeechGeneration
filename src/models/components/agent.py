@@ -3,9 +3,10 @@ from typing import Any
 import torch
 
 from ..abc.agent import Agent as AbstractAgent
-from .controller import Controller
-from .observation_auto_encoder import ObservationEncoder
-from .transition import Transition
+from ..abc.controller import Controller
+from ..abc.observation_auto_encoder import ObservationEncoder
+from ..abc.transition import Transition
+
 
 class Agent(AbstractAgent):
     def __init__(
@@ -13,24 +14,26 @@ class Agent(AbstractAgent):
         controller: Controller,
         transition: Transition,
         obs_encoder: ObservationEncoder,
-        *args: Any,
-        **kwds: Any
-        ):
+        action_noise_ratio: float = 0.5,
+    ):
         """
         Args:
             controller (Controller): Instance of Controller model class.
             transition (Transition): Instance of Transition model class.
             obs_encoder (ObservationEncoder): Instance of Observation Encoder model class.
+            action_noise_ratio (float): Mixing ratio of action noise. Max 1, Min 0. If 1, action is only noise.
         """
+        assert 0.0 <= action_noise_ratio <= 1.0
+
         super().__init__(
             controller=controller,
             transition=transition,
             obs_encoder=obs_encoder,
-            *args,
-            **kwds
         )
-        
-    def explore(self, obs: torch.Tensor, target: torch.Tensor, alpha: int) -> torch.Tensor:
+
+        self.action_noise_ratio = action_noise_ratio
+
+    def explore(self, obs: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Take action for exploring environment using input observation.
 
         Args:
@@ -40,15 +43,9 @@ class Agent(AbstractAgent):
         Returns:
             action (_tensor_or_any): Action for exploring environment.
         """
-        state = self.obs_encoder.forward(self.hidden, obs).sample()
-        action, controller_hidden = self.controller.forward(
-            self.hidden, state, target, self.controller_hidden, probabilistic=probabilistic
-        )
+        action = self.act(obs, target, True)
 
-        # Update internal hidden state.
-        self.hidden = self.transition.forward(self.hidden, state, action)
-        self.controller_hidden = controller_hidden
+        noise = torch.rand_like(action) * 2 - 1
+        action = noise * self.action_noise_ratio + (1 - self.action_noise_ratio) * action
 
-        batch_size, action_size = action.size()
-        noise = torch.rand(batch_size,action_size)
-        return action * alpha + (1 - alpha) * noise
+        return action
