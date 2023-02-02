@@ -68,13 +68,13 @@ class Trainer:
             logger.info(f"Episode {episode} is started.")
 
             model.current_episode = episode
-            model.current_step = current_step
 
             logger.debug("Collecting experiences...")
             model.collect_experiences(env, replay_buffer)
             logger.debug("Collected experiences.")
 
             for collect_interval in range(self.collect_experience_interval):
+                model.current_step = current_step
                 logger.debug(f"Collect interval: {collect_interval}")
 
                 # Training World Model.
