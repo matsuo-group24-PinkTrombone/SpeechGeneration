@@ -21,10 +21,12 @@ class Controller(AbsController):
     ):
         """
         Args:
+            encoder (PosteriorEncoderVITS): target encoder module.
             hidden_size (int): The size of hidden state(h_t) of RNN
             state_size (int): The size of state(s_t)
             c_hidden_size (int): The size of controller_hidden_state(hc_t) of RNN
             action_size (int): The size of action(a_t)
+            input_size (int): Input dimension of RNN
             bias (bool, optional): This argument determines whether RNN requires bias or not. Defaults to True.
         """
 
@@ -60,7 +62,7 @@ class Controller(AbsController):
         target: Tensor,
         controller_hidden: Tensor,
         probabilistic: bool,
-    ):
+    ) -> Tuple[Tensor,Tensor]:
         """
         Args:
             hidden (Tensor):hidden state of RNN[B,hidden_size]
@@ -68,6 +70,10 @@ class Controller(AbsController):
             target (Tensor):target melspectrogram [B,in_channels, T_feats]
             cotroller_hidden (Tensor):hidden state of controller RNN[B,c_hidden_size]
             probabilistic (bool):  If True, sample action from normal distribution.
+        
+        Returns:
+            action (Tensor): ction data `a_t`. The value range must be [-1, 1].
+            next_controller_hidden (Tensor): Next controller hidden state `hc_{t+1}`.
         """
         # target encoding
         z, _m, _logs, x_mask = self.encoder(
