@@ -1,5 +1,6 @@
 # My Projects
 poetry.lock
+tests/models/components/conformer/test_plot/swish.png
 
 logs/*
 !logs/.gitkeep
