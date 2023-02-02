@@ -34,3 +34,4 @@ def test_explorer(action_noise_ratio):
     # Sanity checks
     out = agent.explore(obs, target)
     assert out.shape == (batch_size, *action_shape)
+    assert torch.all(out <= 1.0) and torch.all(out >= -1.0)

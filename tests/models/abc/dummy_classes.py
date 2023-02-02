@@ -118,7 +118,7 @@ class DummyController(Controller):
         probabilistic: bool,
     ) -> tuple[Tensor, Tensor]:
         shape = (hidden.size(0), *self._action_shape)
-        return torch.rand(shape) * 2 + 0.5, torch.randn_like(controller_hidden)
+        return torch.rand(shape) * 2 - 1, torch.randn_like(controller_hidden)
 
     @property
     def controller_hidden_shape(self) -> tuple[int]:
