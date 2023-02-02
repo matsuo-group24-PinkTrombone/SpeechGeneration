@@ -246,7 +246,6 @@ class Dreamer(nn.Module):
 
             next_state = next_state_posterior.rsample()
             rec_voc_stat, rec_gened_sound = self.obs_decoder.forward(next_hidden, next_state)
-
             all_states[idx] = next_state.detach()
             all_hiddens[idx] = next_hidden.detach()
 
@@ -255,13 +254,23 @@ class Dreamer(nn.Module):
                 batch_size, -1
             )
             all_kl_div_loss += kl_div_loss.sum(-1).mean()
-            rec_voc_state_loss += F.mse_loss(voc_stat, rec_voc_stat)
-            rec_generated_sound_loss += F.mse_loss(gened_sound, rec_gened_sound)
+            rec_voc_state_loss += F.mse_loss(voc_stat.cpu(), rec_voc_stat.cpu())
+            rec_generated_sound_loss += F.mse_loss(gened_sound.cpu(), rec_gened_sound.cpu())
 
             # next step
             is_done = dones[idx].reshape(-1)
-            next_state = torch.stack([torch.zeros(next_state.size(-1)) if d else next_state[i] for i, d in enumerate(is_done)])  # Initialize with zero.
-            next_hidden = torch.stack([torch.zeros(next_hidden.size(-1)) if d else next_hidden[i] for i, d in enumerate(is_done)])  # Initialize with zero.
+            next_state = torch.stack(
+                [
+                    torch.zeros(next_state.size(-1)) if d else next_state[i]
+                    for i, d in enumerate(is_done)
+                ]
+            )  # Initialize with zero.
+            next_hidden = torch.stack(
+                [
+                    torch.zeros(next_hidden.size(-1)) if d else next_hidden[i]
+                    for i, d in enumerate(is_done)
+                ]
+            )  # Initialize with zero.
 
             state = next_state
             hidden = next_hidden
@@ -342,12 +351,20 @@ class Dreamer(nn.Module):
             rec_next_obs = self.obs_decoder.forward(next_hidden, next_state)
             _, rec_gened_sound = rec_next_obs
 
-            loss += F.mse_loss(target, rec_gened_sound)
+            loss += F.mse_loss(target.cpu(), rec_gened_sound.cpu())
 
             hidden = next_hidden
 
-            controller_hidden[dones[indices, batch_arange]] = 0.0
-            hidden[dones[indices, batch_arange]] = old_hiddens[indices + 1, batch_arange]
+            is_done = dones[indices, batch_arange].reshape(-1)
+            controller_hidden = torch.stack(
+                [
+                    torch.zeros(controller_hidden.size(-1)) if d else controller_hidden[i]
+                    for i, d in enumerate(is_done)
+                ]
+            )
+            hidden = torch.stack(
+                [old_hiddens[indices + 1, i] if d else hidden[i] for i, d in enumerate(is_done)]
+            )
             state = self.prior.forward(hidden)
 
         loss /= self.imagination_horizon

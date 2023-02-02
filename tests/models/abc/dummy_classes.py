@@ -1,10 +1,10 @@
 from typing import Any
 
 import torch
+import torch.nn as nn
 from torch import Tensor
 from torch.distributions import Normal
 from torch.nn import Linear
-import torch.nn as nn
 
 from src.models.abc.agent import Agent
 from src.models.abc.controller import Controller
@@ -102,7 +102,9 @@ class DummyObservationDecoder(ObservationDecoder):
         ).type_as(hidden)
 
 
-class DummyController(Controller, ):
+class DummyController(
+    Controller,
+):
     """Dummy controller model class for testing."""
 
     def __init__(
@@ -136,13 +138,17 @@ class DummyController(Controller, ):
         return self._controller_hidden_shape
 
 
-class DummyWorld(World, ):
+class DummyWorld(
+    World,
+):
     """Dummy world model interface class for testing."""
 
     pass
 
 
-class DummyAgent(Agent, ):
+class DummyAgent(
+    Agent,
+):
     """Dummy agent model interface class for testing."""
 
     def __init__(self, action_shape: tuple[int], *args, **kwds):

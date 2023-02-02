@@ -1,8 +1,8 @@
 import logging
-from collections import OrderedDict
-from typing import Any, Optional
-from datetime import datetime
 import os
+from collections import OrderedDict
+from datetime import datetime
+from typing import Any, Optional
 
 import gym
 import torch
@@ -118,7 +118,10 @@ class Trainer:
                     if self.checkpoint_path is None:
                         save_path = f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt"
                     else:
-                        save_path = os.path.join(self.load_checkpoint, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt")        
+                        save_path = os.path.join(
+                            self.load_checkpoint,
+                            f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt",
+                        )
                     self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
 
                 current_step += 1
@@ -126,7 +129,9 @@ class Trainer:
         if self.checkpoint_path is None:
             save_path = f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt"
         else:
-            save_path = os.path.join(self.load_checkpoint, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt")
+            save_path = os.path.join(
+                self.load_checkpoint, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt"
+            )
         self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
 
     def setup_model_attribute(self, model: Dreamer):
