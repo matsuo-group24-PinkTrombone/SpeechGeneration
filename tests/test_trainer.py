@@ -1,17 +1,20 @@
+import os
 from functools import partial
 from tempfile import NamedTemporaryFile
-import os
 
 import pytest
 import torch
+from pynktrombonegym.spaces import ObservationSpaceNames as OSN
 from torch.optim import SGD
 
 from src.env.array_action import ARRAY_ORDER as AO_act
+from src.env.array_voc_state import VSON
 from src.env.make_env import make_env
 from src.models.dreamer import Dreamer
 from src.trainer import Trainer
-from src.env.array_voc_state import VSON
-from pynktrombonegym.spaces import ObservationSpaceNames as OSN
+
+# from src.models.components.agent import Agent # AgentのPRがマージされたら追加
+from tests.models.abc.dummy_classes import DummyAgent as Agent
 from tests.models.abc.dummy_classes import DummyAgent as DA
 from tests.models.abc.dummy_classes import DummyController as DC
 from tests.models.abc.dummy_classes import DummyObservationDecoder as DOD
@@ -19,9 +22,6 @@ from tests.models.abc.dummy_classes import DummyObservationEncoder as DOE
 from tests.models.abc.dummy_classes import DummyPrior as DP
 from tests.models.abc.dummy_classes import DummyTransition as DT
 from tests.models.abc.dummy_classes import DummyWorld as DW
-
-# from src.models.components.agent import Agent # AgentのPRがマージされたら追加
-from tests.models.abc.dummy_classes import DummyAgent as Agent
 
 env = make_env(["data/sample_target_sounds"])
 
@@ -93,7 +93,7 @@ def test_fit(device):
     log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
     env = make_env(["data/sample_target_sounds"])
     trainer = Trainer(log_dir=log_dir, device=device, collect_experience_interval=2, chunk_size=2)
-    dreamer = Dreamer(*dreamer_args)
+    dreamer = Dreamer(*dreamer_args, imagination_horizon=1)
     rb = dreamer.configure_replay_buffer(env, buffer_size=4)
     trainer.setup_model_attribute(dreamer)
     trainer.fit(env, rb, dreamer)
@@ -110,6 +110,7 @@ def test_save_checkpoint(device):
     ckpt = NamedTemporaryFile()
     trainer.save_checkpoint(ckpt.name, dreamer, wopt, copt)
     del log_dir
+
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_load_checkpoint(device):
