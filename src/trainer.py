@@ -1,17 +1,20 @@
 import logging
 from collections import OrderedDict
 from typing import Any, Optional
+from datetime import datetime
+import os
 
 import gym
 import torch
 from torch.nn.utils import clip_grad_norm_
 from torch.optim import Optimizer
+from torch.utils.tensorboard import SummaryWriter
 
 from .datamodules import buffer_names
 from .datamodules.replay_buffer import ReplayBuffer
 from .env.array_voc_state import VocStateObsNames as ObsNames
 from .models.dreamer import Dreamer
-from torch.utils.tensorboard import SummaryWriter
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +29,7 @@ class Trainer:
 
     def __init__(
         self,
-        log_dir:str,
+        log_dir: str,
         num_episode: int = 1,
         collect_experience_interval: int = 100,
         batch_size: int = 8,
@@ -112,11 +115,19 @@ class Trainer:
                     # logging
 
                 if current_step % self.model_save_interval == 0:
-                    self.save_checkpoint("/logs/...", model, world_optimizer, controller_optimizer)
+                    if self.checkpoint_path is None:
+                        save_path = f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt"
+                    else:
+                        save_path = os.path.join(self.load_checkpoint, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt")        
+                    self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
 
                 current_step += 1
 
-        self.save_checkpoint("/logs/...", model, world_optimizer, controller_optimizer)
+        if self.checkpoint_path is None:
+            save_path = f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt"
+        else:
+            save_path = os.path.join(self.load_checkpoint, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt")
+        self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
 
     def setup_model_attribute(self, model: Dreamer):
         """Add attribute for model training.
