@@ -24,9 +24,11 @@ class DummyTransition(Transition):
         super().__init__()
         self._hidden_shape = hidden_shape
         self.dmy_lyr = Linear(8, 16)
+        self.dmy_w = nn.Parameter(torch.zeros(8))
 
     def forward(self, hidden: Tensor, state: Tensor, action: Tensor) -> Tensor:
-        return torch.randn(hidden.shape, requires_grad=True)
+        next_hidden = torch.randn_like(hidden)
+        return hidden + (next_hidden + state.mean() + action.mean()) * self.dmy_w.mean()
 
     @property
     def hidden_shape(self) -> tuple[int]:
@@ -40,11 +42,13 @@ class DummyPrior(Prior):
         super().__init__()
         self._state_shape = state_shape
         self.dmy_lyr = Linear(8, 16)
+        self.dmy_w = nn.Parameter(torch.zeros(8))
 
     def forward(self, hidden: Tensor) -> Normal:
         shape = (hidden.size(0), *self.state_shape)
-        mean = torch.zeros(shape).type_as(hidden)
-        std = torch.ones_like(mean)
+        mean = (torch.zeros(shape).type_as(hidden) + hidden.mean()) * self.dmy_w.mean()
+        std = torch.ones_like(mean) + mean.abs()
+
         return Normal(mean, std)
 
     @property
@@ -62,16 +66,21 @@ class DummyObservationEncoder(ObservationEncoder):
         self._state_shape = state_shape
         self.embedded_obs_shape = embedded_obs_shape
         self.dmy_lyr = Linear(8, 16)
+        self.dmy_w = nn.Parameter(torch.zeros(8))
 
     def embed_observation(self, obs: tuple[Tensor, Tensor]) -> Tensor:
         v, g = obs
         shape = (v.size(0), *self.embedded_obs_shape)
-        return torch.randn(shape, requires_grad=True).type_as(v)
+        emb = torch.randn(shape, requires_grad=True).type_as(v)
+        return emb + (v.mean() + g.mean()) * self.dmy_w.mean()
 
     def encode(self, hidden: Tensor, embedded_obs: Tensor) -> Normal:
         shape = (hidden.size(0), *self.state_shape)
-        mean = torch.zeros(shape).type_as(hidden)
-        std = torch.ones_like(mean)
+        mean = (
+            torch.zeros(shape).type_as(self.dmy_w)
+            + (hidden.mean() + embedded_obs.mean()) * self.dmy_w.mean()
+        )
+        std = torch.ones_like(mean) + mean.abs()
         return Normal(mean, std)
 
     @property
@@ -93,18 +102,22 @@ class DummyObservationDecoder(ObservationDecoder):
         self._voc_state_shape = voc_state_shape
         self._generated_sound_shape = generated_sound_shape
         self.dmy_lyr = Linear(8, 16)
+        self.dmy_w = nn.Parameter(torch.zeros(8))
 
     def forward(self, hidden: Tensor, state: Tensor) -> Tensor:
         vs_shape = (hidden.size(0), *self._voc_state_shape)
         gs_shape = (hidden.size(0), *self._generated_sound_shape)
-        return torch.randn(vs_shape, requires_grad=True).type_as(hidden), torch.randn(
+        vs, gs = torch.randn(vs_shape, requires_grad=True).type_as(hidden), torch.randn(
             gs_shape, requires_grad=True
         ).type_as(hidden)
 
+        vs = vs + (hidden.mean() + state.mean()) * self.dmy_w.mean()
+        gs = gs + (hidden.mean() + state.mean()) * self.dmy_w.mean()
 
-class DummyController(
-    Controller,
-):
+        return vs, gs
+
+
+class DummyController(Controller):
     """Dummy controller model class for testing."""
 
     def __init__(
@@ -119,6 +132,7 @@ class DummyController(
         self._action_shape = action_shape
         self._controller_hidden_shape = controller_hidden_shape
         self.dmy_lyr = Linear(8, 16)
+        self.dmy_w = nn.Parameter(torch.zeros(8))
 
     def forward(
         self,
@@ -129,26 +143,31 @@ class DummyController(
         probabilistic: bool,
     ) -> tuple[Tensor, Tensor]:
         shape = (hidden.size(0), *self._action_shape)
-        return torch.rand(shape, requires_grad=True) * 2 + 0.5, torch.randn_like(
+        act, h_c = torch.rand(shape, requires_grad=True) * 2 - 1, torch.randn_like(
             controller_hidden, requires_grad=True
         )
+        act, h_c = act.type_as(self.dmy_w), h_c.type_as(self.dmy_w)
+        # act = act + (hidden.mean() + state.mean() + target.mean() + controller_hidden.mean() + self.dmy_w.mean()) / 1e+10
+        # act = act / act.abs().max()
+        h_c = (
+            h_c
+            + (hidden.mean() + state.mean() + target.mean() + controller_hidden.mean())
+            * self.dmy_w.mean()
+        )
+        return act, h_c
 
     @property
     def controller_hidden_shape(self) -> tuple[int]:
         return self._controller_hidden_shape
 
 
-class DummyWorld(
-    World,
-):
+class DummyWorld(World):
     """Dummy world model interface class for testing."""
 
     pass
 
 
-class DummyAgent(
-    Agent,
-):
+class DummyAgent(Agent):
     """Dummy agent model interface class for testing."""
 
     def __init__(self, action_shape: tuple[int], *args, **kwds):
@@ -156,5 +175,7 @@ class DummyAgent(
         self.action_shape = action_shape
 
     def explore(self, obs: tuple[Tensor, Tensor], target: Tensor) -> Tensor:
-        action = torch.rand(self.action_shape, requires_grad=True)
+        w = obs[0].mean() + obs[1].mean() + target.mean()
+        action = torch.rand(self.action_shape, requires_grad=True).type_as(w) + w * 0.0
+        action = action / action.abs().max()
         return action
