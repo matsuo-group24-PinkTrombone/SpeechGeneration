@@ -254,8 +254,8 @@ class Dreamer(nn.Module):
                 batch_size, -1
             )
             all_kl_div_loss += kl_div_loss.sum(-1).mean()
-            rec_voc_state_loss += F.mse_loss(voc_stat.cpu(), rec_voc_stat.cpu())
-            rec_generated_sound_loss += F.mse_loss(gened_sound.cpu(), rec_gened_sound.cpu())
+            rec_voc_state_loss += F.mse_loss(voc_stat, rec_voc_stat)
+            rec_generated_sound_loss += F.mse_loss(gened_sound, rec_gened_sound)
 
             # next step
             is_done = dones[idx].reshape(-1)
@@ -338,8 +338,8 @@ class Dreamer(nn.Module):
         state = self.prior.forward(hidden).sample()
 
         loss = 0.0
-        for i in range(self.imagination_horizon):
-            indices = start_indices + i
+        for horizon in range(self.imagination_horizon):
+            indices = start_indices + horizon
             target = torch.as_tensor(
                 target_sounds[indices, batch_arange], dtype=dtype, device=device
             )
@@ -351,7 +351,7 @@ class Dreamer(nn.Module):
             rec_next_obs = self.obs_decoder.forward(next_hidden, next_state)
             _, rec_gened_sound = rec_next_obs
 
-            loss += F.mse_loss(target.cpu(), rec_gened_sound.cpu())
+            loss += F.mse_loss(target, rec_gened_sound)
 
             hidden = next_hidden
 
@@ -363,9 +363,9 @@ class Dreamer(nn.Module):
                 ]
             )
             hidden = torch.stack(
-                [old_hiddens[indices + 1, i] if d else hidden[i] for i, d in enumerate(is_done)]
+                [old_hiddens[indices[i] + 1, i] if d else hidden[i] for i, d in enumerate(is_done)]
             )
-            state = self.prior.forward(hidden)
+            state = self.prior.forward(hidden).sample()
 
         loss /= self.imagination_horizon
 
