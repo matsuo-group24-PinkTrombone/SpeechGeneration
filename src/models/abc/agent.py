@@ -64,15 +64,13 @@ class Agent(ABC):
         return action
 
     @abstractmethod
-    def explore(
-        self, obs: _tensor_or_any, target: _tensor_or_any, alpha: _tensor_or_any
-    ) -> _tensor_or_any:
+    def explore(self, obs: _tensor_or_any, target: _tensor_or_any) -> _tensor_or_any:
         """Take action for exploring environment using input observation.
 
         Args:
             obs (_tensor_or_any): Observation from environment.
             target (_tensor_or_any): Target sound data from environment.
-            alpha (_tensor_or_any): The output of the action model and the mixing ratio of the Gaussian distribution.
+
         Returns:
             action (_tensor_or_any): Action for exploring environment.
         """
