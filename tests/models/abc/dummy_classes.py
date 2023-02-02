@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 from torch.distributions import Normal
 from torch.nn import Linear
+import torch.nn as nn
 
 from src.models.abc.agent import Agent
 from src.models.abc.controller import Controller
@@ -16,7 +17,7 @@ from src.models.abc.transition import Transition
 from src.models.abc.world import World
 
 
-class DummyTransition(Transition):
+class DummyTransition(Transition, ):
     """Dummy transition model class for testing."""
 
     def __init__(self, hidden_shape: tuple[int], *args: Any, **kwds: Any) -> None:
@@ -32,7 +33,7 @@ class DummyTransition(Transition):
         return self._hidden_shape
 
 
-class DummyPrior(Prior):
+class DummyPrior(Prior, ):
     """Dummy prior model class for testing."""
 
     def __init__(self, state_shape: tuple[int], *args: Any, **kwds: Any) -> None:
@@ -51,7 +52,7 @@ class DummyPrior(Prior):
         return self._state_shape
 
 
-class DummyObservationEncoder(ObservationEncoder):
+class DummyObservationEncoder(ObservationEncoder, ):
     """Dummy observation encoder model class for testing."""
 
     def __init__(
@@ -78,7 +79,7 @@ class DummyObservationEncoder(ObservationEncoder):
         return self._state_shape
 
 
-class DummyObservationDecoder(ObservationDecoder):
+class DummyObservationDecoder(ObservationDecoder, ):
     """Dummy observation decoder model class for testing."""
 
     def __init__(
@@ -96,10 +97,12 @@ class DummyObservationDecoder(ObservationDecoder):
     def forward(self, hidden: Tensor, state: Tensor) -> Tensor:
         vs_shape = (hidden.size(0), *self._voc_state_shape)
         gs_shape = (hidden.size(0), *self._generated_sound_shape)
-        return torch.randn(vs_shape, requires_grad=True).type_as(hidden), torch.randn(gs_shape, requires_grad=True).type_as(hidden)
+        return torch.randn(vs_shape, requires_grad=True).type_as(hidden), torch.randn(
+            gs_shape, requires_grad=True
+        ).type_as(hidden)
 
 
-class DummyController(Controller):
+class DummyController(Controller, ):
     """Dummy controller model class for testing."""
 
     def __init__(
@@ -124,20 +127,22 @@ class DummyController(Controller):
         probabilistic: bool,
     ) -> tuple[Tensor, Tensor]:
         shape = (hidden.size(0), *self._action_shape)
-        return torch.rand(shape, requires_grad=True) * 2 + 0.5, torch.randn_like(controller_hidden, requires_grad=True)
+        return torch.rand(shape, requires_grad=True) * 2 + 0.5, torch.randn_like(
+            controller_hidden, requires_grad=True
+        )
 
     @property
     def controller_hidden_shape(self) -> tuple[int]:
         return self._controller_hidden_shape
 
 
-class DummyWorld(World):
+class DummyWorld(World, ):
     """Dummy world model interface class for testing."""
 
     pass
 
 
-class DummyAgent(Agent):
+class DummyAgent(Agent, ):
     """Dummy agent model interface class for testing."""
 
     def __init__(self, action_shape: tuple[int], *args, **kwds):

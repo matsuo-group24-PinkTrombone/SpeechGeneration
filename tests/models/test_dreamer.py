@@ -59,7 +59,7 @@ ctrl = DC(action_shape, ctrl_hidden_shape)
 
 
 d_world = partial(DW)
-d_agent = partial(DA)
+d_agent = partial(DA, action_shape=action_shape)
 
 world_opt = partial(SGD, lr=1e-3)
 ctrl_opt = partial(SGD, lr=1e-3)
