@@ -1,6 +1,6 @@
 import os
 from functools import partial
-from tempfile import NamedTemporaryFile
+from tempfile import TemporaryDirectory
 
 import pytest
 import torch
@@ -60,7 +60,7 @@ del env
 
 
 def make_ckpt_path_and_tensorboard():
-    p_dir = NamedTemporaryFile().name
+    p_dir = TemporaryDirectory().name
     if os.path.exists(p_dir):
         os.makedirs(
             p_dir,

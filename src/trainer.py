@@ -118,17 +118,19 @@ class Trainer:
                     # logging
 
                 if current_step % self.model_save_interval == 0:
+                    file_name = f"episode{episode+1}_step{current_step+1}.ckpt"
                     save_path = os.path.join(
                         self.checkpoint_destination_path,
-                        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt",
+                        file_name,
                     )
                     self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
 
                 current_step += 1
 
+        file_name = f"episode{episode+1}_step{current_step+1}.ckpt"
         save_path = os.path.join(
             self.checkpoint_destination_path,
-            f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt",
+            file_name
         )
         self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
 
