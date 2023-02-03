@@ -29,7 +29,8 @@ class Trainer:
 
     def __init__(
         self,
-        log_dir: str,
+        checkpoint_destination_path: str,
+        tensorboard: SummaryWriter,
         num_episode: int = 1,
         collect_experience_interval: int = 100,
         batch_size: int = 8,
@@ -37,7 +38,7 @@ class Trainer:
         gradient_clip_value: float = 100.0,
         evaluation_interval=10,
         model_save_interval=20,
-        checkpoint_path: Optional[Any] = None,
+        saved_checkpoint_path: Optional[Any] = None,
         device: Any = "cpu",
         dtype: Any = torch.float32,
     ) -> None:
@@ -58,8 +59,10 @@ class Trainer:
         model = model.to(self.device, self.dtype)
 
         world_optimizer, controller_optimizer = model.configure_optimizers()
-        if self.checkpoint_path is not None:
-            self.load_checkpoint(model, world_optimizer, controller_optimizer)
+        if self.saved_checkpoint_path is not None:
+            self.load_checkpoint(
+                self.saved_checkpoint_path, model, world_optimizer, controller_optimizer
+            )
 
         current_step = 0
 
@@ -115,23 +118,18 @@ class Trainer:
                     # logging
 
                 if current_step % self.model_save_interval == 0:
-                    if self.checkpoint_path is None:
-                        save_path = f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt"
-                    else:
-                        save_path = os.path.join(
-                            self.load_checkpoint,
-                            f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt",
-                        )
+                    save_path = os.path.join(
+                        self.checkpoint_destination_path,
+                        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt",
+                    )
                     self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
 
                 current_step += 1
 
-        if self.checkpoint_path is None:
-            save_path = f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt"
-        else:
-            save_path = os.path.join(
-                self.load_checkpoint, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt"
-            )
+        save_path = os.path.join(
+            self.checkpoint_destination_path,
+            f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.ckpt",
+        )
         self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
 
     def setup_model_attribute(self, model: Dreamer):
@@ -145,7 +143,7 @@ class Trainer:
         model.dtype = self.dtype
         model.current_episode = 0
         model.current_step = 0
-        model.tensorboard = SummaryWriter(log_dir=self.log_dir)
+        model.tensorboard = self.tensorboard
 
     def save_checkpoint(
         self, path: Any, model: Dreamer, world_optim: Optimizer, controller_optim: Optimizer
