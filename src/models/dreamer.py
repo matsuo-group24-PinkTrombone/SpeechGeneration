@@ -358,12 +358,17 @@ class Dreamer(nn.Module):
             is_done = dones[indices, batch_arange].reshape(-1)
             controller_hidden = torch.stack(
                 [
-                    torch.zeros(controller_hidden.size(-1)) if d else controller_hidden[i]
+                    torch.zeros_like(controller_hidden[i]) if d else controller_hidden[i]
                     for i, d in enumerate(is_done)
                 ]
             )
             hidden = torch.stack(
-                [old_hiddens[indices[i] + 1, i] if d else hidden[i] for i, d in enumerate(is_done)]
+                [
+                    torch.as_tensor(old_hiddens[indices[i] + 1, i], device=device, dtype=dtype)
+                    if d
+                    else hidden[i]
+                    for i, d in enumerate(is_done)
+                ]
             )
             state = self.prior.forward(hidden).sample()
 
