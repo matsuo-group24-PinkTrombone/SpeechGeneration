@@ -52,25 +52,32 @@ class Agent(ABC):
         Returns:
             action (_tensor_or_any): Action for stepping environment.
         """
-        state = self.obs_encoder.forward(self.hidden, obs).sample()
+        hidden = self.transition._hidden_of_agent
+        controller_hidden = self.controller._controller_hidden_of_agent
+
+        state = self.obs_encoder.forward(hidden, obs).sample()
         action, controller_hidden = self.controller.forward(
-            self.hidden, state, target, self.controller_hidden, probabilistic=probabilistic
+            hidden, state, target, controller_hidden, probabilistic=probabilistic
         )
 
         # Update internal hidden state.
-        self.hidden = self.transition.forward(self.hidden, state, action)
-        self.controller_hidden = controller_hidden
+        self.transition._hidden_of_agent = self.transition.forward(hidden, state, action)
+        self.controller._controller_hidden_of_agent = controller_hidden
+        self.hidden = self.transition._hidden_of_agent
+        self.controller_hidden = self.controller._controller_hidden_of_agent
 
         return action
 
     @abstractmethod
-    def explore(self, obs: _tensor_or_any, target: _tensor_or_any) -> _tensor_or_any:
+    def explore(
+        self, obs: _tensor_or_any, target: _tensor_or_any, alpha: _tensor_or_any
+    ) -> _tensor_or_any:
         """Take action for exploring environment using input observation.
 
         Args:
             obs (_tensor_or_any): Observation from environment.
             target (_tensor_or_any): Target sound data from environment.
-
+            alpha (_tensor_or_any): The output of the action model and the mixing ratio of the Gaussian distribution.
         Returns:
             action (_tensor_or_any): Action for exploring environment.
         """
