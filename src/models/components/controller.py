@@ -62,7 +62,7 @@ class Controller(AbsController):
         target: Tensor,
         controller_hidden: Tensor,
         probabilistic: bool,
-    ) -> Tuple[Tensor,Tensor]:
+    ) -> Tuple[Tensor, Tensor]:
         """
         Args:
             hidden (Tensor):hidden state of RNN[B,hidden_size]
@@ -70,7 +70,7 @@ class Controller(AbsController):
             target (Tensor):target melspectrogram [B,in_channels, T_feats]
             cotroller_hidden (Tensor):hidden state of controller RNN[B,c_hidden_size]
             probabilistic (bool):  If True, sample action from normal distribution.
-        
+
         Returns:
             action (Tensor): ction data `a_t`. The value range must be [-1, 1].
             next_controller_hidden (Tensor): Next controller hidden state `hc_{t+1}`.

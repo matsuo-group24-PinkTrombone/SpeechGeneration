@@ -157,7 +157,6 @@ class DummyController(Controller):
         )
         return act, h_c
 
-
     @property
     def controller_hidden_shape(self) -> tuple[int]:
         return self._controller_hidden_shape
