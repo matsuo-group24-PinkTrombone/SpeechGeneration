@@ -6,6 +6,7 @@ import pytest
 import torch
 from pynktrombonegym.spaces import ObservationSpaceNames as OSN
 from torch.optim import SGD
+from torch.utils.tensorboard import SummaryWriter
 
 from src.env.array_action import ARRAY_ORDER as AO_act
 from src.env.array_voc_state import VSON
@@ -58,26 +59,36 @@ dreamer_args = (trans, prior, obs_enc, obs_dec, ctrl, d_world, d_agent, world_op
 del env
 
 
+def make_ckpt_path_and_tensorboard():
+    p_dir = NamedTemporaryFile().name
+    if os.path.exists(p_dir):
+        os.makedirs(
+            p_dir,
+        )
+    ckpt_path = p_dir
+    tensorboard = SummaryWriter(p_dir)
+    return ckpt_path, tensorboard
+
+
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test__init__(device):
-    log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
-    mod = Trainer(log_dir=log_dir, device=device)
-    assert mod.num_episode is not None
-    assert mod.collect_experience_interval is not None
-    assert mod.batch_size is not None
-    assert mod.chunk_size is not None
-    assert mod.gradient_clip_value is not None
-    assert mod.evaluation_interval is not None
-    assert mod.model_save_interval is not None
-    assert mod.device is not None
-    assert mod.dtype is not None
-    del log_dir
+    ckpt_destination, tb = make_ckpt_path_and_tensorboard()
+    mod = Trainer(ckpt_destination, tb, device=device)
+    assert mod.num_episode == 1
+    assert mod.collect_experience_interval == 100
+    assert mod.batch_size == 8
+    assert mod.chunk_size == 64
+    assert mod.gradient_clip_value == 100.0
+    assert mod.evaluation_interval == 10
+    assert mod.model_save_interval == 20
+    assert mod.device == device
+    assert mod.dtype == torch.float32
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_setup_model_attribute(device):
-    log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
-    trainer = Trainer(log_dir=log_dir, device=device)
+    ckpt_destination, tb = make_ckpt_path_and_tensorboard()
+    trainer = Trainer(ckpt_destination, tb, device=device)
     dreamer = Dreamer(*dreamer_args)
     trainer.setup_model_attribute(dreamer)
 
@@ -85,40 +96,40 @@ def test_setup_model_attribute(device):
     assert dreamer.dtype == trainer.dtype
     assert dreamer.current_episode == 0
     assert dreamer.current_step == 0
-    del log_dir
+    assert dreamer.tensorboard == trainer.tensorboard
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_fit(device):
-    log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
+    ckpt_destination, tb = make_ckpt_path_and_tensorboard()
     env = make_env(["data/sample_target_sounds"])
-    trainer = Trainer(log_dir=log_dir, device=device, collect_experience_interval=2, chunk_size=2)
+    trainer = Trainer(
+        ckpt_destination, tb, device=device, collect_experience_interval=2, chunk_size=2
+    )
     dreamer = Dreamer(*dreamer_args, imagination_horizon=1)
     rb = dreamer.configure_replay_buffer(env, buffer_size=4)
     trainer.setup_model_attribute(dreamer)
     trainer.fit(env, rb, dreamer)
-    del env, log_dir
+    del env
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_save_checkpoint(device):
-    log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
+    ckpt_destination, tb = make_ckpt_path_and_tensorboard()
     dreamer = Dreamer(*dreamer_args)
-    env = make_env(["data/sample_target_sounds"])
-    trainer = Trainer(log_dir=log_dir, device=device, collect_experience_interval=2)
+    trainer = Trainer(ckpt_destination, tb, device=device, collect_experience_interval=2)
     wopt, copt = dreamer.configure_optimizers()
-    ckpt = NamedTemporaryFile()
-    trainer.save_checkpoint(ckpt.name, dreamer, wopt, copt)
-    del log_dir
+    save_path = os.path.join(ckpt_destination, "test.ckpt")
+    trainer.save_checkpoint(save_path, dreamer, wopt, copt)
+    assert os.path.exists(save_path)
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_load_checkpoint(device):
-    log_dir = os.path.join(NamedTemporaryFile().name, "tensorboard")
-    trainer = Trainer(log_dir=log_dir, device=device, collect_experience_interval=2)
+    ckpt_destination, tb = make_ckpt_path_and_tensorboard()
+    trainer = Trainer(ckpt_destination, tb, device=device, collect_experience_interval=2)
     dreamer = Dreamer(*dreamer_args)
     wopt, copt = dreamer.configure_optimizers()
-    ckpt = NamedTemporaryFile()
-    trainer.save_checkpoint(ckpt.name, dreamer, wopt, copt)
-    trainer.load_checkpoint(ckpt.name, dreamer, wopt, copt)
-    del log_dir
+    save_path = os.path.join(ckpt_destination, "test_load_checkpoint.ckpt")
+    trainer.save_checkpoint(save_path, dreamer, wopt, copt)
+    trainer.load_checkpoint(save_path, dreamer, wopt, copt)
