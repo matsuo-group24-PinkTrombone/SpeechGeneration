@@ -261,13 +261,13 @@ class Dreamer(nn.Module):
             is_done = dones[idx].reshape(-1)
             next_state = torch.stack(
                 [
-                    torch.zeros(next_state.size(-1)) if d else next_state[i]
+                    torch.zeros_like(next_state[i]) if d else next_state[i]
                     for i, d in enumerate(is_done)
                 ]
             )  # Initialize with zero.
             next_hidden = torch.stack(
                 [
-                    torch.zeros(next_hidden.size(-1)) if d else next_hidden[i]
+                    torch.zeros_like(next_hidden[i]) if d else next_hidden[i]
                     for i, d in enumerate(is_done)
                 ]
             )  # Initialize with zero.
