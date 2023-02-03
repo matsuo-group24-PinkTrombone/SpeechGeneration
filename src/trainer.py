@@ -128,10 +128,7 @@ class Trainer:
                 current_step += 1
 
         file_name = f"episode{episode+1}_step{current_step+1}.ckpt"
-        save_path = os.path.join(
-            self.checkpoint_destination_path,
-            file_name
-        )
+        save_path = os.path.join(self.checkpoint_destination_path, file_name)
         self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
 
     def setup_model_attribute(self, model: Dreamer):
