@@ -120,15 +120,14 @@ class Dreamer(nn.Module):
 
         return [world_optim, con_optim]
 
-    def configure_replay_buffer(self, env: gym.Env, buffer_size: int) -> ReplayBuffer:
-        """Configure replay buffer to store experiences.
+    def configure_replay_buffer_space(self, env: gym.Env) -> dict[str, Box]:
+        """Configure replay buffer space to store experiences.
 
         Args:
             env (gym.Env): PynkTrombone environment or its wrapper class.
-            buffer_size (int): Max length of experiences you can store.
 
         Returns:
-            ReplayBuffer: Replay buffer that can store experiences.
+            spaces: Replay buffer storing spaces.
         """
         action_box = env.action_space
         vocal_state_box = env.observation_space[VSON.VOC_STATE]
@@ -141,9 +140,7 @@ class Dreamer(nn.Module):
         spaces[buffer_names.TARGET_SOUND] = generated_sound_box
         spaces[buffer_names.DONE] = Box(0, 1, shape=(1,), dtype=bool)
 
-        replay_buffer = ReplayBuffer(spaces, buffer_size)
-
-        return replay_buffer
+        return spaces
 
     @torch.no_grad()
     def collect_experiences(self, env: gym.Env, replay_buffer: ReplayBuffer) -> ReplayBuffer:

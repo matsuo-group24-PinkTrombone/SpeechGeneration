@@ -13,6 +13,7 @@ from src.env.array_voc_state import VSON
 from src.env.make_env import make_env
 from src.models.dreamer import Dreamer
 from src.trainer import Trainer
+from src.datamodules.replay_buffer import ReplayBuffer
 
 # from src.models.components.agent import Agent # AgentのPRがマージされたら追加
 from tests.models.abc.dummy_classes import DummyAgent as Agent
@@ -107,7 +108,8 @@ def test_fit(device):
         ckpt_destination, tb, device=device, collect_experience_interval=2, chunk_size=2
     )
     dreamer = Dreamer(*dreamer_args, imagination_horizon=1)
-    rb = dreamer.configure_replay_buffer(env, buffer_size=4)
+    rb_spaces = dreamer.configure_replay_buffer_space(env)
+    rb = ReplayBuffer(rb_spaces, buffer_size=4)
     trainer.setup_model_attribute(dreamer)
     trainer.fit(env, rb, dreamer)
     del env
