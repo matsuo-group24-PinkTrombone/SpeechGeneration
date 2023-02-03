@@ -81,6 +81,7 @@ class DummyObservationEncoder(ObservationEncoder):
             + (hidden.mean() + embedded_obs.mean()) * self.dmy_w.mean()
         )
         std = torch.ones_like(mean) + mean.abs()
+
         return Normal(mean, std)
 
     @property
@@ -155,6 +156,7 @@ class DummyController(Controller):
             * self.dmy_w.mean()
         )
         return act, h_c
+
 
     @property
     def controller_hidden_shape(self) -> tuple[int]:
