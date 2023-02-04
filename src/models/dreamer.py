@@ -120,15 +120,14 @@ class Dreamer(nn.Module):
 
         return [world_optim, con_optim]
 
-    def configure_replay_buffer(self, env: gym.Env, buffer_size: int) -> ReplayBuffer:
-        """Configure replay buffer to store experiences.
+    def configure_replay_buffer_space(self, env: gym.Env) -> dict[str, Box]:
+        """Configure replay buffer space to store experiences.
 
         Args:
             env (gym.Env): PynkTrombone environment or its wrapper class.
-            buffer_size (int): Max length of experiences you can store.
 
         Returns:
-            ReplayBuffer: Replay buffer that can store experiences.
+            spaces: Replay buffer storing spaces.
         """
         action_box = env.action_space
         vocal_state_box = env.observation_space[VSON.VOC_STATE]
@@ -141,9 +140,7 @@ class Dreamer(nn.Module):
         spaces[buffer_names.TARGET_SOUND] = generated_sound_box
         spaces[buffer_names.DONE] = Box(0, 1, shape=(1,), dtype=bool)
 
-        replay_buffer = ReplayBuffer(spaces, buffer_size)
-
-        return replay_buffer
+        return spaces
 
     @torch.no_grad()
     def collect_experiences(self, env: gym.Env, replay_buffer: ReplayBuffer) -> ReplayBuffer:
@@ -246,7 +243,6 @@ class Dreamer(nn.Module):
 
             next_state = next_state_posterior.rsample()
             rec_voc_stat, rec_gened_sound = self.obs_decoder.forward(next_hidden, next_state)
-
             all_states[idx] = next_state.detach()
             all_hiddens[idx] = next_hidden.detach()
 
@@ -259,8 +255,19 @@ class Dreamer(nn.Module):
             rec_generated_sound_loss += F.mse_loss(gened_sound, rec_gened_sound)
 
             # next step
-            next_state[dones[idx]] = 0.0  # Initialize with zero.
-            next_hidden[dones[idx]] = 0.0  # Initialize with zero.
+            is_done = dones[idx].reshape(-1)
+            next_state = torch.stack(
+                [
+                    torch.zeros_like(next_state[i]) if d else next_state[i]
+                    for i, d in enumerate(is_done)
+                ]
+            )  # Initialize with zero.
+            next_hidden = torch.stack(
+                [
+                    torch.zeros_like(next_hidden[i]) if d else next_hidden[i]
+                    for i, d in enumerate(is_done)
+                ]
+            )  # Initialize with zero.
 
             state = next_state
             hidden = next_hidden
@@ -328,8 +335,8 @@ class Dreamer(nn.Module):
         state = self.prior.forward(hidden).sample()
 
         loss = 0.0
-        for i in range(self.imagination_horizon):
-            indices = start_indices + i
+        for horizon in range(self.imagination_horizon):
+            indices = start_indices + horizon
             target = torch.as_tensor(
                 target_sounds[indices, batch_arange], dtype=dtype, device=device
             )
@@ -345,9 +352,22 @@ class Dreamer(nn.Module):
 
             hidden = next_hidden
 
-            controller_hidden[dones[indices, batch_arange]] = 0.0
-            hidden[dones[indices, batch_arange]] = old_hiddens[indices + 1, batch_arange]
-            state = self.prior.forward(hidden)
+            is_done = dones[indices, batch_arange].reshape(-1)
+            controller_hidden = torch.stack(
+                [
+                    torch.zeros_like(controller_hidden[i]) if d else controller_hidden[i]
+                    for i, d in enumerate(is_done)
+                ]
+            )
+            hidden = torch.stack(
+                [
+                    torch.as_tensor(old_hiddens[indices[i] + 1, i], device=device, dtype=dtype)
+                    if d
+                    else hidden[i]
+                    for i, d in enumerate(is_done)
+                ]
+            )
+            state = self.prior.forward(hidden).sample()
 
         loss /= self.imagination_horizon
 

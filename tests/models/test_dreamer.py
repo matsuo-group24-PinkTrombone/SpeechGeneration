@@ -59,7 +59,7 @@ ctrl = DC(action_shape, ctrl_hidden_shape)
 
 
 d_world = partial(DW)
-d_agent = partial(DA)
+d_agent = partial(DA, action_shape=action_shape)
 
 world_opt = partial(SGD, lr=1e-3)
 ctrl_opt = partial(SGD, lr=1e-3)
@@ -182,10 +182,10 @@ def test_evaluation_step():
     model.tensorboard.close()
 
 
-def test_configure_replay_buffer():
+def test_configure_replay_buffer_space():
     env = AVS(AA(NAR(ABA(L1MS(target_files), action_scaler=1.0))))
     model = Dreamer(*args)
-    rb = model.configure_replay_buffer(env, bf_size)
+    rb_spaces = model.configure_replay_buffer_space(env)
     spaces = {
         buffer_names.VOC_STATE: env.observation_space[VSON.VOC_STATE],
         buffer_names.ACTION: env.action_space,
@@ -193,7 +193,7 @@ def test_configure_replay_buffer():
         buffer_names.GENERATED_SOUND: env.observation_space[VSON.GENERATED_SOUND_SPECTROGRAM],
         buffer_names.DONE: Box(0, 1, shape=(1,), dtype=bool),
     }
-    for name, box in rb.spaces.items():
+    for name, box in rb_spaces.items():
         assert box == spaces.get(name), f"space {name} isn't set properly(box:{box}"
     del env
 
