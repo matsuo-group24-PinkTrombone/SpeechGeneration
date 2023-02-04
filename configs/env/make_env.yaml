@@ -1,0 +1,5 @@
+_target_: src.env.make_env.make_env
+
+dataset_dirs: ["data/generated_randomly"]
+sample_rate: 44100
+n_mels: 80
