@@ -16,8 +16,9 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 RUN conda config --add channels conda-forge && \
   git config --global --add safe.directory /workspace
 
-RUN conda install -y nodejs libsndfile poetry && \
+RUN conda install -y nodejs libsndfile && \
   conda upgrade -y nodejs && \
+  pip install poetry && \
   poetry config virtualenvs.create false && \
   poetry install
 
