@@ -163,11 +163,14 @@ class Trainer:
         ckpt[CheckPointNames.CONTROLLER_OPTIMIZER] = controller_optim.state_dict()
 
         torch.save(ckpt, path)
+        logger.info(f"Saved checkpoint to {path}")
 
     def load_checkpoint(
         self, path: Any, model: Dreamer, world_optim: Optimizer, controller_optim: Optimizer
-    ):
+    ) -> None:
+        """Load checkpoint."""
         ckpt = torch.load(path, self.device)
         model.load_state_dict(ckpt[CheckPointNames.MODEL])
         world_optim.load_state_dict(ckpt[CheckPointNames.WORLD_OPTIMIZER])
         controller_optim.load_state_dict(ckpt[CheckPointNames.CONTROLLER_OPTIMIZER])
+        logger.info(f"Loaded checkpoint from {path}")
