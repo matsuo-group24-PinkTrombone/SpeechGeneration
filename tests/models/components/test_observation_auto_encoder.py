@@ -1,9 +1,13 @@
 import pytest
 import torch
 
-from src.models.components.observation_auto_encoder import ObservationEncoder, ObservationDecoder
-from src.models.components.posterior_encoder_vits import PosteriorEncoderVITS
 from src.models.components.conformer_decoder_fastspeech2 import ConformerDecoder
+from src.models.components.observation_auto_encoder import (
+    ObservationDecoder,
+    ObservationEncoder,
+)
+from src.models.components.posterior_encoder_vits import PosteriorEncoderVITS
+
 
 @pytest.mark.parametrize(
     """
@@ -55,16 +59,12 @@ def test_observation_encoder(
     """,
     [(1, 192, 192, 44, 80, 5)],
 )
-def test_observation_encoder(
+def test_observation_decoder(
     batch_size: int, hidden_size: int, state_size: int, v_channels: int, mel_channels: int, feats_T
 ):
     # instance posterior encoder
-    idim=hidden_size + state_size
-    conformer_decoder = ConformerDecoder(
-        idim=idim,
-        odim=mel_channels,
-        adim=idim
-    )
+    idim = hidden_size + state_size
+    conformer_decoder = ConformerDecoder(idim=idim, odim=mel_channels, adim=idim)
 
     # instance observation encoder
     obs_decoder = ObservationDecoder(
@@ -74,8 +74,11 @@ def test_observation_encoder(
 
     # create input
     hidden = torch.rand((batch_size, hidden_size))
-    state = torch.rand((batch_size,state_size))
+    state = torch.rand((batch_size, state_size))
 
-    reconst_obs = obs_decoder(hidden,state,)
+    reconst_obs = obs_decoder(
+        hidden,
+        state,
+    )
 
-    assert reconst_obs.size() == torch.Size([batch_size, mel_channels,feats_T])
+    assert reconst_obs.size() == torch.Size([batch_size, mel_channels, feats_T])

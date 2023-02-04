@@ -1,11 +1,12 @@
-from typing import Optional,Callable
+from typing import Callable, Optional
 
 import torch
 
-from ..abc.observation_auto_encoder import ObservationEncoder as AbsObservationEncoder
 from ..abc.observation_auto_encoder import ObservationDecoder as AbsObservationDecoder
-from ..components.posterior_encoder_vits import PosteriorEncoderVITS
+from ..abc.observation_auto_encoder import ObservationEncoder as AbsObservationEncoder
 from ..components.conformer_decoder_fastspeech2 import ConformerDecoder
+from ..components.posterior_encoder_vits import PosteriorEncoderVITS
+
 
 class ObservationEncoder(AbsObservationEncoder):
     def __init__(
@@ -78,14 +79,13 @@ class ObservationEncoder(AbsObservationEncoder):
 
 
 class ObservationDecoder(AbsObservationDecoder):
-
     def __init__(
         self,
-        decoder:ConformerDecoder,
-        feats_T:int,
-        conv_kernel_size:int = 3,
-        conv_padding_size:int = 1,
-        conv_bias:bool = True,
+        decoder: ConformerDecoder,
+        feats_T: int,
+        conv_kernel_size: int = 3,
+        conv_padding_size: int = 1,
+        conv_bias: bool = True,
     ):
         """
         Args:
@@ -101,7 +101,7 @@ class ObservationDecoder(AbsObservationDecoder):
             out_channels=feats_T,
             kernel_size=conv_kernel_size,
             padding=conv_padding_size,
-            bias=conv_bias
+            bias=conv_bias,
         )
 
     def forward(
@@ -110,6 +110,7 @@ class ObservationDecoder(AbsObservationDecoder):
         state: torch.Tensor,
     ):
         """Decode to observation.
+
         Args:
             hidden (Tensor): hidden state `h_t`.
             state (Tensor): world state `s_t`.
@@ -117,13 +118,13 @@ class ObservationDecoder(AbsObservationDecoder):
             obs (Tensor): reconstructed observation (o^_t).
                 For instance, obs=(voc state v_t, generated sound g_t) is returned.
         """
-        concat_input = torch.concat((hidden,state),dim=1)
+        concat_input = torch.concat((hidden, state), dim=1)
 
         time_extend_input = self.time_extend_conv(
-            concat_input.unsqueeze(1) # (batch, 1, channels)
+            concat_input.unsqueeze(1)  # (batch, 1, channels)
         )
 
-        decoder_input = time_extend_input.transpose(1,2) # (batch, channels, feats_T)
+        decoder_input = time_extend_input.transpose(1, 2)  # (batch, channels, feats_T)
 
         reconst_obs = self.decoder(torch.tanh(decoder_input))
 
