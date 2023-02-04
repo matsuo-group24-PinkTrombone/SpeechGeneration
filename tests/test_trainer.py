@@ -8,12 +8,12 @@ from pynktrombonegym.spaces import ObservationSpaceNames as OSN
 from torch.optim import SGD
 from torch.utils.tensorboard import SummaryWriter
 
+from src.datamodules.replay_buffer import ReplayBuffer
 from src.env.array_action import ARRAY_ORDER as AO_act
 from src.env.array_voc_state import VSON
 from src.env.make_env import make_env
 from src.models.dreamer import Dreamer
 from src.trainer import Trainer
-from src.datamodules.replay_buffer import ReplayBuffer
 
 # from src.models.components.agent import Agent # AgentのPRがマージされたら追加
 from tests.models.abc.dummy_classes import DummyAgent as Agent
