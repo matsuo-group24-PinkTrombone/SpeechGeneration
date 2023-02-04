@@ -3,6 +3,7 @@ import os
 from collections import OrderedDict
 from datetime import datetime
 from typing import Any, Optional
+from tqdm import tqdm
 
 import gym
 import torch
@@ -67,7 +68,7 @@ class Trainer:
         current_step = 0
 
         logger.info("Fit started.")
-        for episode in range(self.num_episode):
+        for episode in tqdm(range(self.num_episode)):
             logger.info(f"Episode {episode} is started.")
 
             model.current_episode = episode
@@ -76,7 +77,7 @@ class Trainer:
             model.collect_experiences(env, replay_buffer)
             logger.debug("Collected experiences.")
 
-            for collect_interval in range(self.collect_experience_interval):
+            for collect_interval in tqdm(range(self.collect_experience_interval)):
                 model.current_step = current_step
                 logger.debug(f"Collect interval: {collect_interval}")
 
