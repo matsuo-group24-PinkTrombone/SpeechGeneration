@@ -13,7 +13,7 @@ class ObservationEncoder(AbsObservationEncoder):
         self,
         mel_encoder: PosteriorEncoderVITS,
         state_size: int,
-        hiddden_size: int,
+        hidden_size: int,
         feats_T: int,
         min_logs: float = 0.1,
     ):
@@ -26,8 +26,8 @@ class ObservationEncoder(AbsObservationEncoder):
         self.obs_embedding_layer = mel_encoder
         self.time_reduction_layer = torch.nn.Linear(feats_T, 1)
 
-        self.fc_mean = torch.nn.Linear(state_size + hiddden_size, state_size)
-        self.fc_logs = torch.nn.Linear(state_size + hiddden_size, state_size)
+        self.fc_mean = torch.nn.Linear(state_size + hidden_size, state_size)
+        self.fc_logs = torch.nn.Linear(state_size + hidden_size, state_size)
 
     def embed_observation(self, obs: torch.Tensor) -> torch.Tensor:
         """Embed observation to latent space.
