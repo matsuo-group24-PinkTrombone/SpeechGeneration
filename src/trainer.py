@@ -2,14 +2,15 @@ import logging
 import os
 from collections import OrderedDict
 from datetime import datetime
+from pprint import pformat
 from typing import Any, Optional
-from tqdm import tqdm
 
 import gym
 import torch
 from torch.nn.utils import clip_grad_norm_
 from torch.optim import Optimizer
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
 from .datamodules import buffer_names
 from .datamodules.replay_buffer import ReplayBuffer
@@ -40,6 +41,7 @@ class Trainer:
         evaluation_interval=10,
         model_save_interval=20,
         saved_checkpoint_path: Optional[Any] = None,
+        console_log_every_n_step: int = 1,
         device: Any = "cpu",
         dtype: Any = torch.float32,
     ) -> None:
@@ -86,7 +88,6 @@ class Trainer:
                     self.batch_size, self.chunk_size, chunk_first=True
                 )
                 loss_dict, experiences_dict = model.world_training_step(experiences_dict)
-
                 loss: torch.Tensor = loss_dict["loss"]
                 world_optimizer.zero_grad()
                 loss.backward()
@@ -97,6 +98,9 @@ class Trainer:
                 world_optimizer.step()
 
                 # -- logging --
+                if current_step % self.console_log_every_n_step == 0:
+                    log_loss = pformat(loss_dict)
+                    logger.info(log_loss)
 
                 # ---- Training Controller model. -----
                 loss_dict, experiences_dict = model.controller_training_step(experiences_dict)
@@ -111,13 +115,17 @@ class Trainer:
                 controller_optimizer.step()
 
                 # logging
+                if current_step % self.console_log_every_n_step == 0:
+                    log_loss = pformat(loss_dict)
+                    logger.info(log_loss)
 
                 if current_step % self.evaluation_interval == 0:
                     # ----- Evaluation steps -----
                     loss_dict = model.evaluation_step(env)
 
                     # logging
-
+                    log_loss = pformat(loss_dict)
+                    logger.info(log_loss)
                 if current_step % self.model_save_interval == 0:
                     file_name = f"episode{episode}_step{current_step}.ckpt"
                     save_path = os.path.join(
