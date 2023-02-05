@@ -87,7 +87,7 @@ class ObservationDecoder(AbsObservationDecoder):
         conv_kernel_size: int = 3,
         conv_padding_size: int = 1,
         conv_bias: bool = True,
-    ):
+    ) -> None:
         """
         Args:
             decoder: Decoder to reconstruct the mel spectrogram
@@ -111,15 +111,15 @@ class ObservationDecoder(AbsObservationDecoder):
         self,
         hidden: torch.Tensor,
         state: torch.Tensor,
-    ):
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Decode to observation.
 
         Args:
             hidden (Tensor): hidden state `h_t`.
             state (Tensor): world state `s_t`.
         Returns:
-            obs (Tensor): reconstructed observation (o^_t).
-                For instance, obs=(voc state v_t, generated sound g_t) is returned.
+            obs (tuple[Tensor, Tensor]): reconstructed observation (o^_t).
+                obs=(voc state v_t, generated sound g_t) is returned.
         """
         concat_input = torch.concat((hidden, state), dim=1)
 
