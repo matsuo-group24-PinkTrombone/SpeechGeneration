@@ -33,7 +33,7 @@ def test_observation_encoder(
 
     # instance observation encoder
     obs_encoder = ObservationEncoder(
-        mel_encoder=mel_encoder, state_size=state_size, hiddden_size=hidden_size, feats_T=feats_T
+        mel_encoder=mel_encoder, state_size=state_size, hidden_size=hidden_size, feats_T=feats_T
     )
 
     # create input
