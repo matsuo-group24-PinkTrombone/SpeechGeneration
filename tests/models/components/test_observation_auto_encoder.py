@@ -68,9 +68,7 @@ def test_observation_decoder(
 
     # instance observation encoder
     obs_decoder = ObservationDecoder(
-        decoder=conformer_decoder,
-        feats_T=feats_T,
-        voc_state_size=v_channels
+        decoder=conformer_decoder, feats_T=feats_T, voc_state_size=v_channels
     )
 
     # create input
@@ -86,4 +84,3 @@ def test_observation_decoder(
 
     assert _mel.size() == torch.Size([batch_size, mel_channels, feats_T])
     assert _voc.size() == torch.Size([batch_size, v_channels])
-

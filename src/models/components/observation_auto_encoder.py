@@ -82,7 +82,7 @@ class ObservationDecoder(AbsObservationDecoder):
     def __init__(
         self,
         decoder: ConformerDecoder,
-        voc_state_size:int,
+        voc_state_size: int,
         feats_T: int,
         conv_kernel_size: int = 3,
         conv_padding_size: int = 1,
@@ -105,10 +105,7 @@ class ObservationDecoder(AbsObservationDecoder):
             bias=conv_bias,
         )
 
-        self.voc_decoder = torch.nn.Linear(
-            self.decoder.idim,
-            voc_state_size
-        )
+        self.voc_decoder = torch.nn.Linear(self.decoder.idim, voc_state_size)
 
     def forward(
         self,
