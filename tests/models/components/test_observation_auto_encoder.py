@@ -80,7 +80,7 @@ def test_observation_decoder(
         state,
     )
 
-    _mel, _voc = reconst_obs
+    _voc, _mel = reconst_obs
 
     assert _mel.size() == torch.Size([batch_size, mel_channels, feats_T])
     assert _voc.size() == torch.Size([batch_size, v_channels])
