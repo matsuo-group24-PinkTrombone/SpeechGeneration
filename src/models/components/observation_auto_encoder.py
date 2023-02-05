@@ -82,11 +82,12 @@ class ObservationDecoder(AbsObservationDecoder):
     def __init__(
         self,
         decoder: ConformerDecoder,
+        voc_state_size: int,
         feats_T: int,
         conv_kernel_size: int = 3,
         conv_padding_size: int = 1,
         conv_bias: bool = True,
-    ):
+    ) -> None:
         """
         Args:
             decoder: Decoder to reconstruct the mel spectrogram
@@ -104,19 +105,21 @@ class ObservationDecoder(AbsObservationDecoder):
             bias=conv_bias,
         )
 
+        self.voc_decoder = torch.nn.Linear(self.decoder.idim, voc_state_size)
+
     def forward(
         self,
         hidden: torch.Tensor,
         state: torch.Tensor,
-    ):
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Decode to observation.
 
         Args:
             hidden (Tensor): hidden state `h_t`.
             state (Tensor): world state `s_t`.
         Returns:
-            obs (Tensor): reconstructed observation (o^_t).
-                For instance, obs=(voc state v_t, generated sound g_t) is returned.
+            obs (tuple[Tensor, Tensor]): reconstructed observation (o^_t).
+                obs=(voc state v_t, generated sound g_t) is returned.
         """
         concat_input = torch.concat((hidden, state), dim=1)
 
@@ -126,6 +129,10 @@ class ObservationDecoder(AbsObservationDecoder):
 
         decoder_input = time_extend_input.transpose(1, 2)  # (batch, channels, feats_T)
 
-        reconst_obs = self.decoder(torch.tanh(decoder_input))
+        reconst_mel = self.decoder(torch.tanh(decoder_input))
+
+        reconst_voc = self.voc_decoder(concat_input)
+
+        reconst_obs = (reconst_mel, reconst_voc)
 
         return reconst_obs
