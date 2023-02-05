@@ -1,0 +1,16 @@
+_target_: src.trainer.Trainer
+
+checkpoint_destination_path: ${paths.output_dir}/checkpoints
+tensorboard:
+  _target_: torch.utils.tensorboard.SummaryWriter
+  log_dir: ${paths.output_dir}/tensorboard
+num_episode: 500
+collect_experience_interval: 100
+batch_size: 256
+chunk_size: 64
+gradient_clip_value: 100
+evaluation_interval: 10
+model_save_interval: 25
+console_log_every_n_step: 10
+log_every_n_steps: 10
+device: "cuda"
