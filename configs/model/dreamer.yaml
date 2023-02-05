@@ -34,6 +34,7 @@ obs_decoder:
     idim: 512 # ${state_size} + ${hidden_size}
     odim: ${...obs_encoder.mel_encoder.in_channels}
     adim: 512 # ${state_size} + ${hidden_size}
+  voc_state_size: ${..obs_encoder.mel_encoder.global_channels}
   feats_T: ${..obs_encoder.feats_T}
   conv_kernel_size: 3
   conv_padding_size: 1
