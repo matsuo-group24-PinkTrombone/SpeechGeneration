@@ -42,6 +42,7 @@ class Trainer:
         model_save_interval=20,
         saved_checkpoint_path: Optional[Any] = None,
         console_log_every_n_step: int = 1,
+        log_every_n_steps: int = 1,
         device: Any = "cpu",
         dtype: Any = torch.float32,
     ) -> None:
@@ -152,6 +153,7 @@ class Trainer:
         model.current_episode = 0
         model.current_step = 0
         model.tensorboard = self.tensorboard
+        model.log_every_n_steps = self.log_every_n_steps
 
     def save_checkpoint(
         self, path: Any, model: Dreamer, world_optim: Optimizer, controller_optim: Optimizer
