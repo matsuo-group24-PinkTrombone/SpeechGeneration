@@ -8,6 +8,10 @@ defaults:
   - _self_
   - paths: default.yaml
   - hydra: default.yaml
+  - env: make_env.yaml
+  - model: dreamer.yaml
+  - replay_buffer: replay_buffer.yaml
+  - trainer: trainer.yaml
 
 task_name: "train"
 
