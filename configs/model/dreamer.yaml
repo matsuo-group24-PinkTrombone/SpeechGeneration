@@ -9,50 +9,50 @@ feats_T: 5
 Dreamer:
   transition:
     _target_: src.models.components.transition.Transition
-    hidden_sise: ${hidden_size}
-    state_size: ${state_size}
-    action_size: ${action_size}
-    input_size: ${input_size}
+      hidden_sise: ${hidden_size}
+      state_size: ${state_size}
+      action_size: ${action_size}
+      input_size: ${input_size}
   prior:
     _target_: src.models.components.prior_encoder.Prior
-    hidden_dim: ${hidden_size}
-    state_dim: ${state_size}
+      hidden_dim: ${hidden_size}
+      state_dim: ${state_size}
   obs_encoder:
     _target_: src.models.components.observation_auto_encoder.ObservationEncoder
-    mel_encoder:
-      _target_: src.models.components.posterior_encoder_vits.PosteriorEncoderVITS
-      in_channels: ${mel_channels}
-      out_channels: ${state_size}
-      hidden_channels: ${state_size}
-      kernel_size: ${feats_T}
-      layers: 2
-      stacks: 1
-      global_channels: ${vocal_tract_size}
-    state_size: ${state_size}
-    hidden_size: ${hidden_size}
-    feats_T: ${feats_T}
+      mel_encoder:
+        _target_: src.models.components.posterior_encoder_vits.PosteriorEncoderVITS
+          in_channels: ${mel_channels}
+          out_channels: ${state_size}
+          hidden_channels: ${state_size}
+          kernel_size: ${feats_T}
+          layers: 2
+          stacks: 1
+          global_channels: ${vocal_tract_size}
+      state_size: ${state_size}
+      hidden_size: ${hidden_size}
+      feats_T: ${feats_T}
   obs_decoder: 
     _target_: src.models.components.observation_auto_encoder.ObservationDecoder
-    decoder: 
-      _target_: src.models.components.conformer_decoder_fastspeech2.ConformerDecoder
-      idim: ${state_size} + ${hidden_size}
-      odim: ${mel_channels}
-      adim: ${state_size} + ${hidden_size}
-    feats_T: ${feats_T}
-    conv_kernel_size: 3
-    conv_padding_size: 1
-    conv_bias: True
+      decoder: 
+        _target_: src.models.components.conformer_decoder_fastspeech2.ConformerDecoder
+          idim: ${state_size} + ${hidden_size}
+          odim: ${mel_channels}
+          adim: ${state_size} + ${hidden_size}
+      feats_T: ${feats_T}
+      conv_kernel_size: 3
+      conv_padding_size: 1
+      conv_bias: True
   controller: 
     _target_: src.models.components.controller.Controller
-    encoder:
-      _target_: src.models.components.src.models.components.posterior_encoder_vits.PosteriorEncoderVITS
-      in_channels: ${mel_channels}
-      out_channels: ${state_size}
-      hidden_channels: ${state_size}
-      kernel_size: ${feats_T}
-      layers: 2
-      stacks: 1
-      global_channels: ${vocal_tract_size}
+      encoder:
+        _target_: src.models.components.src.models.components.posterior_encoder_vits.PosteriorEncoderVITS
+          in_channels: ${mel_channels}
+          out_channels: ${state_size}
+          hidden_channels: ${state_size}
+          kernel_size: ${feats_T}
+          layers: 2
+          stacks: 1
+          global_channels: ${vocal_tract_size}
     hidden_size: ${hidden_size}
     state_size: ${state_size}
     c_hidden_size: ${hidden_size}
@@ -64,9 +64,8 @@ Dreamer:
       _target_: 
     agent:
       _target_: src.models.components.agent.Agent
-      controller: ${Dreamer.controller}
-      transition: ${Dreamer.transition}
-      obs_encoder: ${Dreamer.obs_encoder}
+        controller: ${Dreamer.controller}
+        transition: ${Dreamer.transition}
+        obs_encoder: ${Dreamer.obs_encoder}
     world_optimizer:
     controller_optimizer:
-    
