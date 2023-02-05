@@ -133,6 +133,6 @@ class ObservationDecoder(AbsObservationDecoder):
 
         reconst_voc = self.voc_decoder(concat_input)
 
-        reconst_obs = (reconst_mel, reconst_voc)
+        reconst_obs = (reconst_voc, reconst_mel)
 
         return reconst_obs
