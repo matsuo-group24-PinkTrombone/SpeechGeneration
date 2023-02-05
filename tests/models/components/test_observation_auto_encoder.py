@@ -18,7 +18,7 @@ from src.models.components.posterior_encoder_vits import PosteriorEncoderVITS
     mel_channels,
     feats_T
     """,
-    [(1, 192, 192, 44, 80, 5)],
+    [(1, 192, 192, 75, 80, 5)],
 )
 def test_observation_encoder(
     batch_size: int, hidden_size: int, state_size: int, v_channels: int, mel_channels: int, feats_T
@@ -57,7 +57,7 @@ def test_observation_encoder(
     mel_channels,
     feats_T
     """,
-    [(1, 192, 192, 44, 80, 5)],
+    [(1, 192, 192, 75, 80, 5)],
 )
 def test_observation_decoder(
     batch_size: int, hidden_size: int, state_size: int, v_channels: int, mel_channels: int, feats_T
@@ -68,8 +68,7 @@ def test_observation_decoder(
 
     # instance observation encoder
     obs_decoder = ObservationDecoder(
-        decoder=conformer_decoder,
-        feats_T=feats_T,
+        decoder=conformer_decoder, feats_T=feats_T, voc_state_size=v_channels
     )
 
     # create input
@@ -81,4 +80,7 @@ def test_observation_decoder(
         state,
     )
 
-    assert reconst_obs.size() == torch.Size([batch_size, mel_channels, feats_T])
+    _mel, _voc = reconst_obs
+
+    assert _mel.size() == torch.Size([batch_size, mel_channels, feats_T])
+    assert _voc.size() == torch.Size([batch_size, v_channels])
