@@ -189,9 +189,9 @@ class Dreamer(nn.Module):
                 generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
                 target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
 
-            voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).squeeze(0)
-            generated = torch.as_tensor(generated_np, dtype=dtype, device=device).squeeze(0)
-            target = torch.as_tensor(target_np, dtype=dtype, device=device).squeeze(0)
+            voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).unsqueeze(0)
+            generated = torch.as_tensor(generated_np, dtype=dtype, device=device).unsqueeze(0)
+            target = torch.as_tensor(target_np, dtype=dtype, device=device).unsqueeze(0)
 
     def world_training_step(
         self, experiences: dict[str, np.ndarray]
