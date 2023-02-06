@@ -6,6 +6,7 @@ transition:
   state_size: 256
   action_size: 8
   input_size: 256
+  bias: True
 
 prior:
   _target_: src.models.components.prior_encoder.Prior
