@@ -1,18 +1,16 @@
 # このファイルは直接実行するため、相対import文を記述しないでください。
 import logging
-import random
 from typing import Optional
 
 import gym
 import hydra
-import numpy as np
 import pyrootutils
-import torch
 from omegaconf import DictConfig, OmegaConf
 
 from src.datamodules.replay_buffer import ReplayBuffer
 from src.models.dreamer import Dreamer
 from src.trainer import Trainer
+from src.utils.reset_seed import reset_seed
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
@@ -42,10 +40,7 @@ def train(cfg: DictConfig) -> None:
 
     if cfg.get("seed") is not None:
         seed = cfg.get("seed")
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
+        reset_seed(seed)
         logger.info(f"Reset seed: {seed}")
 
     logger.info(f"Instantiating env <{cfg.env._target_}>")
