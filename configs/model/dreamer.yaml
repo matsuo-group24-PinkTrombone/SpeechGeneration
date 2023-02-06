@@ -83,7 +83,7 @@ controller_optimizer:
 
 free_nats: 3.0
 num_collect_experience_steps: 2000
-imagination_horizon: 64
+imagination_horizon: 44
 evaluation_steps: 3000
 evaluation_blank_length: 44100
 sample_rate: 44100

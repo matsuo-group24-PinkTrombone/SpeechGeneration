@@ -1,12 +1,12 @@
 _target_: src.trainer.Trainer
 
-checkpoint_destination_path: ${paths.output_dir}/checkpoints
+checkpoint_destination_path: ${paths.output_dir}/
 tensorboard:
   _target_: torch.utils.tensorboard.SummaryWriter
   log_dir: ${paths.output_dir}/tensorboard
 num_episode: 500
 collect_experience_interval: 100
-batch_size: 256
+batch_size: 32
 chunk_size: 64
 gradient_clip_value: 100
 evaluation_interval: 10
