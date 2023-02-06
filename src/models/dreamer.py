@@ -282,8 +282,6 @@ class Dreamer(nn.Module):
         else:
             loss = all_kl_div_loss + rec_loss
 
-        loss = rec_loss + (not all_kl_div_loss.item() < self.free_nats) * all_kl_div_loss
-
         loss_dict = {
             "loss": loss,
             "rec_loss": rec_loss,
