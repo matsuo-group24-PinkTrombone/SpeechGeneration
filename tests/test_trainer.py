@@ -84,12 +84,14 @@ def test__init__(device):
     assert mod.model_save_interval == 20
     assert mod.device == device
     assert mod.dtype == torch.float32
+    assert mod.console_log_every_n_step == 1
+    assert mod.log_every_n_steps == 1
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_setup_model_attribute(device):
     ckpt_destination, tb = make_ckpt_path_and_tensorboard()
-    trainer = Trainer(ckpt_destination, tb, device=device)
+    trainer = Trainer(ckpt_destination, tb, device=device, log_every_n_steps=10)
     dreamer = Dreamer(*dreamer_args)
     trainer.setup_model_attribute(dreamer)
 
@@ -98,6 +100,7 @@ def test_setup_model_attribute(device):
     assert dreamer.current_episode == 0
     assert dreamer.current_step == 0
     assert dreamer.tensorboard == trainer.tensorboard
+    assert dreamer.log_every_n_steps == 10
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"])

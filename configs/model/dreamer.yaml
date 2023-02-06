@@ -1,0 +1,89 @@
+_target_: src.models.dreamer.Dreamer
+
+transition:
+  _target_: src.models.components.transition.Transition
+  hidden_size: 256
+  state_size: 256
+  action_size: 8
+  input_size: 256
+  bias: True
+
+prior:
+  _target_: src.models.components.prior_encoder.Prior
+  hidden_dim: ${..transition.hidden_size}
+  state_dim: ${..transition.state_size}
+
+obs_encoder:
+  _target_: src.models.components.observation_auto_encoder.ObservationEncoder
+  feats_T: 5
+  mel_encoder:
+    _target_: src.models.components.posterior_encoder_vits.PosteriorEncoderVITS
+    in_channels: 80
+    out_channels: ${...transition.state_size}
+    hidden_channels: ${...transition.state_size}
+    kernel_size: ${..feats_T}
+    layers: 2
+    stacks: 1
+    global_channels: 75 # voc state size
+  state_size: ${..transition.state_size}
+  hidden_size: ${..transition.hidden_size}
+
+obs_decoder:
+  _target_: src.models.components.observation_auto_encoder.ObservationDecoder
+  decoder:
+    _target_: src.models.components.conformer_decoder_fastspeech2.ConformerDecoder
+    idim: 512 # ${state_size} + ${hidden_size}
+    odim: ${...obs_encoder.mel_encoder.in_channels}
+    adim: 512 # ${state_size} + ${hidden_size}
+  voc_state_size: ${..obs_encoder.mel_encoder.global_channels}
+  feats_T: ${..obs_encoder.feats_T}
+  conv_kernel_size: 3
+  conv_padding_size: 1
+  conv_bias: True
+
+controller:
+  _target_: src.models.components.controller.Controller
+  encoder:
+    _target_: src.models.components.posterior_encoder_vits.PosteriorEncoderVITS
+    in_channels: ${...obs_encoder.mel_encoder.in_channels}
+    out_channels: ${...transition.state_size}
+    hidden_channels: ${...transition.state_size}
+    kernel_size: ${...obs_encoder.feats_T}
+    layers: 2
+    stacks: 1
+    global_channels: ${...obs_encoder.mel_encoder.global_channels}
+  hidden_size: ${..transition.hidden_size}
+  state_size: ${..transition.state_size}
+  c_hidden_size: 256
+  action_size: 8
+  input_size: ${..transition.input_size}
+  feats_T: ${..obs_encoder.feats_T}
+  bias: True
+
+world:
+  _target_: src.models.components.world.World
+  _partial_: true
+
+agent:
+  _target_: src.models.components.agent.Agent
+  _partial_: true
+  action_noise_ratio: 0.5
+
+world_optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001
+  eps: 0.0001
+
+controller_optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001
+  eps: 0.0001
+
+free_nats: 3.0
+num_collect_experience_steps: 2000
+imagination_horizon: 64
+evaluation_steps: 3000
+evaluation_blank_length: 44100
+sample_rate: 44100
