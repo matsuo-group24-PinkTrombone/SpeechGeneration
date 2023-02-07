@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
   ffmpeg \
   git \
   make \
+  screen \
   unzip \
   && rm -rf /var/lib/apt/lists/*
 
