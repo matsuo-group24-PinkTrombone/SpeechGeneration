@@ -20,6 +20,12 @@ docker run -it \
     ...
 ```
 
+**Note: AWS上ではS3ストレージを直接マウントすることができないため、学習の最後にログデータを`/mnt/shared`にコピーする必要があります！**
+
+```sh
+cp -r ./logs/** -d /mnt/shared/logs
+```
+
 ## Hydra による実験設定の上書き
 
 ### 実験用configファイルを作成する
