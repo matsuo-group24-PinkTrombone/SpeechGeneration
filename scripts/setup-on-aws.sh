@@ -4,12 +4,10 @@
 # Setup procedures are following below.
 
 # Settings
-WORK_DIR=$HOME
-# DOCKER_DIR="/var/lib/docker"
-# NEW_DOCKER_DIR="/mnt/shared/docker"
+JSUT_DATASET_ZIP="/mnt/shared/jsut_ver1.1.zip"
 REPOSITORY_URL="https://github.com/matsuo-group24-PinkTrombone/SpeechGeneration.git"
-PROJECT_NAME="project"
-# LOG_DIR="/mnt/shared/logs"
+PROJECT_NAME="jupyter_projects"
+WORK_DIR="$HOME/$PROJECT_NAME"
 DOCKER_IMAGE="gesonanko/speech-generation:latest"
 
 ## run commands.
@@ -19,15 +17,6 @@ echo "Executing on $(pwd)"
 # Install docker.
 curl https://get.docker.com | sh \
     && sudo systemctl --now enable docker
-
-# (Abort) Change the docker image path to `NEW_DOCKER_DIR`.
-# sudo systemctl stop docker
-# sudo systemctl stop docker.socket
-# sudo systemctl stop containerd
-# [ ! -d $NEW_DOCKER_DIR ] && mkdir -p $NEW_DOCKER_DIR
-# sudo mv $DOCKER_DIR $NEW_DOCKER_DIR
-# sudo ln -s $NEW_DOCKER_DIR $DOCKER_DIR
-# sudo systemctl start docker
 
 # Enable docker cuda support.
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
@@ -41,21 +30,15 @@ sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 
 # Clone repository and `cd` into it.
-git clone $REPOSITORY_URL $PROJECT_NAME
-cd $PROJECT_NAME || exit
-echo "Executing on $(pwd)"
+git clone $REPOSITORY_URL ./
 
-
-# (Couldn't implement...) Remove `logs` folder and link to `LOG_DIR`
-# REPO_LOG_DIR_NAME="logs"
-# [ ! -d $LOG_DIR ] && mkdir -p $LOG_DIR
-# [ -d $REPO_LOG_DIR_NAME ] && rm -rf $REPO_LOG_DIR_NAME
-# ln -s $LOG_DIR $REPO_LOG_DIR_NAME
+# Copy and extract dataset.
+unzip "$JSUT_DATASET_ZIP" -d "$(pwd)/data"
 
 # Run docker image and mount project folder to `/workspace`.
 sudo docker run -it \
     --gpus all \
-    --mount type=bind,source="$(pwd)",target=/workspace \
-		-e LOCAL_UID="$(id -u $USER)" \
-		-e LOCAL_GID="$(id -g $USER)" \
+    --mount type=volume,source=speech-generation,target=/workspace \
+    --mount type=bind,source="$(pwd)/data",target=/workspace/data \
+    --mount type=bind,source="$(pwd)/logs",target=/workspace/logs \
     $DOCKER_IMAGE
