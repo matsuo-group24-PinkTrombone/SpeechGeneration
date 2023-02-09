@@ -71,72 +71,79 @@ class Trainer:
         current_step = 0
 
         logger.info("Fit started.")
-        for episode in tqdm(range(self.num_episode)):
-            logger.info(f"Episode {episode} is started.")
+        try:
+            for episode in tqdm(range(self.num_episode)):
+                logger.info(f"Episode {episode} is started.")
 
-            model.current_episode = episode
+                model.current_episode = episode
 
-            logger.info("Collecting experiences...")
-            model.collect_experiences(env, replay_buffer)
-            logger.info("Collected experiences.")
+                logger.info("Collecting experiences...")
+                model.collect_experiences(env, replay_buffer)
+                logger.info("Collected experiences.")
 
-            for collect_interval in tqdm(range(self.collect_experience_interval)):
-                model.current_step = current_step
-                logger.debug(f"Collect interval: {collect_interval}")
+                for collect_interval in tqdm(range(self.collect_experience_interval)):
+                    model.current_step = current_step
+                    logger.debug(f"Collect interval: {collect_interval}")
 
-                # Training World Model.
-                experiences_dict = replay_buffer.sample(
-                    self.batch_size, self.chunk_size, chunk_first=True
-                )
-                loss_dict, experiences_dict = model.world_training_step(experiences_dict)
-                loss: torch.Tensor = loss_dict["loss"]
-                world_optimizer.zero_grad()
-                loss.backward()
-                params = []
-                for p in world_optimizer.param_groups:
-                    params += p["params"]
-                clip_grad_norm_(params, self.gradient_clip_value)
-                world_optimizer.step()
+                    # Training World Model.
+                    experiences_dict = replay_buffer.sample(
+                        self.batch_size, self.chunk_size, chunk_first=True
+                    )
+                    loss_dict, experiences_dict = model.world_training_step(experiences_dict)
+                    loss: torch.Tensor = loss_dict["loss"]
+                    world_optimizer.zero_grad()
+                    loss.backward()
+                    params = []
+                    for p in world_optimizer.param_groups:
+                        params += p["params"]
+                    clip_grad_norm_(params, self.gradient_clip_value)
+                    world_optimizer.step()
 
-                # -- logging --
-                if current_step % self.console_log_every_n_step == 0:
-                    log_loss = pformat(loss_dict)
-                    logger.info(log_loss)
+                    # -- logging --
+                    if current_step % self.console_log_every_n_step == 0:
+                        log_loss = pformat(loss_dict)
+                        logger.info(log_loss)
 
-                # ---- Training Controller model. -----
-                loss_dict, experiences_dict = model.controller_training_step(experiences_dict)
+                    # ---- Training Controller model. -----
+                    loss_dict, experiences_dict = model.controller_training_step(experiences_dict)
 
-                loss: torch.Tensor = loss_dict["loss"]
-                controller_optimizer.zero_grad()
-                loss.backward()
-                params = []
-                for p in controller_optimizer.param_groups:
-                    params += p["params"]
-                clip_grad_norm_(params, self.gradient_clip_value)
-                controller_optimizer.step()
-
-                # logging
-                if current_step % self.console_log_every_n_step == 0:
-                    log_loss = pformat(loss_dict)
-                    logger.info(log_loss)
-
-                if current_step % self.evaluation_interval == 0:
-                    # ----- Evaluation steps -----
-                    loss_dict = model.evaluation_step(env)
+                    loss: torch.Tensor = loss_dict["loss"]
+                    controller_optimizer.zero_grad()
+                    loss.backward()
+                    params = []
+                    for p in controller_optimizer.param_groups:
+                        params += p["params"]
+                    clip_grad_norm_(params, self.gradient_clip_value)
+                    controller_optimizer.step()
 
                     # logging
-                    log_loss = pformat(loss_dict)
-                    logger.info(log_loss)
+                    if current_step % self.console_log_every_n_step == 0:
+                        log_loss = pformat(loss_dict)
+                        logger.info(log_loss)
 
-                if current_step % self.model_save_interval == 0:
-                    file_name = "parameters.ckpt"
-                    save_path = os.path.join(
-                        self.checkpoint_destination_path,
-                        file_name,
-                    )
-                    self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
+                    if current_step % self.evaluation_interval == 0:
+                        # ----- Evaluation steps -----
+                        loss_dict = model.evaluation_step(env)
 
-                current_step += 1
+                        # logging
+                        log_loss = pformat(loss_dict)
+                        logger.info(log_loss)
+
+                    if current_step % self.model_save_interval == 0:
+                        file_name = "parameters.ckpt"
+                        save_path = os.path.join(
+                            self.checkpoint_destination_path,
+                            file_name,
+                        )
+                        self.save_checkpoint(
+                            save_path, model, world_optimizer, controller_optimizer
+                        )
+
+                    current_step += 1
+
+        except BaseException as e:
+            logger.exception(e)
+            logger.error("Saving model...")
 
         file_name = f"episode{episode}_step{current_step}.ckpt"
         save_path = os.path.join(self.checkpoint_destination_path, file_name)
