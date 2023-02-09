@@ -1,0 +1,29 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /env: make_env.yaml
+  - override /model: dreamer.yaml
+  - override /replay_buffer: replay_buffer.yaml
+  - override /trainer: trainer.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["sample_target_sounds"]
+
+seed: 12345
+
+env:
+  dataset_dirs: ["data/sample_target_sounds"]
+
+model:
+  world_optimizer:
+    lr: 0.002
+  free_nats: 10.0
+
+trainer:
+  num_episode: 10
+  gradient_clip_value: 50.0
