@@ -112,6 +112,24 @@ trainer:
 
 ## Tensorboardを使って結果を見る
 
+今回実験した結果は[tensorboardを使用することでインタラクティブに確認することが出来ます。](https://www.tensorflow.org/tensorboard?hl=ja)
+次のようにして起動することができます。そして デフォルトでは http://localhost:6006/ にブラウザからアクセスする事によって使用することが出来ます。
+
+```sh
+# on /workspace
+tensorboard --logdir ./logs
+```
+
+output
+
+```
+...
+Serving TensorBoard on localhost; to expose to the network, use a proxy or pass --bind_all
+TensorBoard 2.11.2 at http://localhost:6006/ (Press CTRL+C to quit)
+```
+
+tensorboardは通常ローカルホストで起動しますが、VPN上に公開したりなど、外部のデバイスからもアクセスすることが出来ます。
+
 ### AWSのJupyter Hub環境
 
 AWS上のJupyter Hubの中でTensorboardを起動し利用する方法は現在わかっていません。
