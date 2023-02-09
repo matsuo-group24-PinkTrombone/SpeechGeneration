@@ -127,8 +127,9 @@ class Trainer:
                     # logging
                     log_loss = pformat(loss_dict)
                     logger.info(log_loss)
+
                 if current_step % self.model_save_interval == 0:
-                    file_name = f"episode{episode}_step{current_step}.ckpt"
+                    file_name = "parameters.ckpt"
                     save_path = os.path.join(
                         self.checkpoint_destination_path,
                         file_name,
