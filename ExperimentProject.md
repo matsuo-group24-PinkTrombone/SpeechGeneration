@@ -85,9 +85,30 @@ trainer:
 
 ## 実験走らせてを放置する。
 
+今回の実験も多くの時間がかかるため、コンソールを閉じても実行が続き、再接続できるようにする方法を記述します。
+
 ### `screen`による放置と再接続
 
+[screenパッケージを使用することで走らせたコードを放置したうえで、再開することができるようになります](https://linuxjm.osdn.jp/html/GNU_screen/man1/screen.1.html)
+
+- `screen python src/train.py`でsshなどの接続が切れても動き続けます
+- `screen -ls`で切断されたセッションを確認することが出来ます。
+  ```
+  There are screens on:
+      2947.a_bsc      (Detached)
+      17657.b_test1   (Detached)
+      17897.c_test2   (Detached)
+  ```
+- `screen -r <id>`で再接続することができます。 e.g. `screen -r 2947`
+
 ### Dockerの再開
+
+1. `docker ps`で実行中のコンテナIDを確認します。
+   ```
+   CONTAINER ID   IMAGE ...
+   af810c94c026   148929cdadbd  ...
+   ```
+2. `docker exec -it <CONTAINER ID> /bin/bash`でbashに入ることができます。
 
 ## Tensorboardを使って結果を見る
 
