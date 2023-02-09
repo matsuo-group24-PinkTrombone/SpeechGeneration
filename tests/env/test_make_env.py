@@ -17,6 +17,7 @@ def test__init__():
         "action_scaler": 1.0,
         "low": -10.0,
         "high": 10.0,
+        "default_frequency": 300.0,
     }
     env = mod.make_env(**configs)
     assert isinstance(env, gym.Env)

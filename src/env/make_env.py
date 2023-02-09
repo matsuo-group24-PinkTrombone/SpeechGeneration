@@ -19,6 +19,7 @@ def make_env(
     sample_rate: int = 44100,
     n_mels: int = 80,
     dtype: Any = np.float32,
+    default_frequency: float = 400.0,
 ) -> gym.Env:
     """Creates an wrapped environment instance from a list of audio dir paths.
 
@@ -31,13 +32,20 @@ def make_env(
         sample_rate (int): The sample rate of audio files. Default is 44100.
         n_mels (int): The number of mel bands to generate. Default is 80.
         dtype (Any): The data type of the audio. Default is np.float32.
+        default_frequency (float): Default vocal tract frequency.
 
     Returns:
         gym.Env: The created environment instance.
     """
     files = create_file_list(dataset_dirs, file_exts)
 
-    base_env = Log1pMelSpectrogram(files, sample_rate=sample_rate, n_mels=n_mels, dtype=dtype)
+    base_env = Log1pMelSpectrogram(
+        files,
+        sample_rate=sample_rate,
+        n_mels=n_mels,
+        dtype=dtype,
+        default_frequency=default_frequency,
+    )
 
     if action_scaler is None:
         action_scaler = base_env.generate_chunk / base_env.sample_rate
