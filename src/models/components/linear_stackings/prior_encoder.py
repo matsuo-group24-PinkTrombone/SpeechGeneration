@@ -54,6 +54,7 @@ class Prior(AbstractPrior):
         Returns:
             state (Distribution) : The Normal distribution
         """
+        hidden = self.fc_input_layer(hidden)
         mean = self.fc_to_mean(hidden)
         stddev = (
             F.softplus(self.fc_to_stddev(hidden)) + self.min_stddev
