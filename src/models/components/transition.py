@@ -1,8 +1,8 @@
 import torch
 from torch import Tensor, nn
 
-from ..abc._types import _tensor_or_any as _toa
-from ..abc.transition import Transition as AbstractTransition
+from src.models.abc._types import _tensor_or_any as _toa
+from src.models.abc.transition import Transition as AbstractTransition
 
 
 class Transition(AbstractTransition):

@@ -6,7 +6,6 @@ from torch.distributions.normal import Normal
 
 from ..abc._types import _t_or_any, _tensor_or_any
 from ..abc.prior import Prior as AbstractPrior
-from .linear_layers import LinearLayers
 
 
 class Prior(AbstractPrior):
@@ -25,12 +24,8 @@ class Prior(AbstractPrior):
         assert hidden_dim > 0, "hidden_dim must be greater than 0"
         assert state_dim > 0, "state_dim must be greater than 0"
 
-        self.fc_to_mean = LinearLayers(
-            input_size=hidden_dim, hidden_size=hidden_dim * 2, layers=3, output_size=state_dim
-        )
-        self.fc_to_stddev = LinearLayers(
-            input_size=hidden_dim, hidden_size=hidden_dim * 2, layers=3, output_size=state_dim
-        )
+        self.fc_to_mean = nn.Linear(hidden_dim, state_dim)
+        self.fc_to_stddev = nn.Linear(hidden_dim, state_dim)
 
     def forward(self, hidden: _tensor_or_any) -> _t_or_any[Distribution]:
         """

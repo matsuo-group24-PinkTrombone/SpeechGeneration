@@ -4,8 +4,7 @@ import torch
 from torch import Tensor
 
 from ..abc.controller import Controller as AbsController
-from .linear_layers import LinearLayers
-from .posterior_encoder_vits import PosteriorEncoderVITS
+from ..components.posterior_encoder_vits import PosteriorEncoderVITS
 
 
 class Controller(AbsController):
@@ -53,18 +52,8 @@ class Controller(AbsController):
             hidden_size=c_hidden_size,
             bias=bias,
         )
-        self.fc_mean = LinearLayers(
-            input_size=c_hidden_size,
-            hidden_size=c_hidden_size * 2,
-            layers=3,
-            output_size=action_size,
-        )
-        self.fc_logs = LinearLayers(
-            input_size=c_hidden_size,
-            hidden_size=c_hidden_size * 2,
-            layers=3,
-            output_size=action_size,
-        )
+        self.fc_mean = torch.nn.Sequential(torch.nn.Linear(c_hidden_size, action_size))
+        self.fc_logs = torch.nn.Sequential(torch.nn.Linear(c_hidden_size, action_size))
 
     def forward(
         self,

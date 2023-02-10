@@ -4,9 +4,8 @@ import torch
 
 from ..abc.observation_auto_encoder import ObservationDecoder as AbsObservationDecoder
 from ..abc.observation_auto_encoder import ObservationEncoder as AbsObservationEncoder
-from .conformer_decoder_fastspeech2 import ConformerDecoder
-from .linear_layers import LinearLayers
-from .posterior_encoder_vits import PosteriorEncoderVITS
+from ..components.conformer_decoder_fastspeech2 import ConformerDecoder
+from ..components.posterior_encoder_vits import PosteriorEncoderVITS
 
 
 class ObservationEncoder(AbsObservationEncoder):
@@ -27,18 +26,8 @@ class ObservationEncoder(AbsObservationEncoder):
         self.obs_embedding_layer = mel_encoder
         self.time_reduction_layer = torch.nn.Linear(feats_T, 1)
 
-        self.fc_mean = LinearLayers(
-            input_size=state_size + hidden_size,
-            hidden_size=(state_size + hidden_size) * 2,
-            layers=3,
-            output_size=state_size,
-        )
-        self.fc_logs = LinearLayers(
-            input_size=state_size + hidden_size,
-            hidden_size=(state_size + hidden_size) * 2,
-            layers=3,
-            output_size=state_size,
-        )
+        self.fc_mean = torch.nn.Linear(state_size + hidden_size, state_size)
+        self.fc_logs = torch.nn.Linear(state_size + hidden_size, state_size)
 
     def embed_observation(self, obs: torch.Tensor) -> torch.Tensor:
         """Embed observation to latent space.
@@ -116,12 +105,7 @@ class ObservationDecoder(AbsObservationDecoder):
             bias=conv_bias,
         )
 
-        self.voc_decoder = LinearLayers(
-            input_size=self.decoder.idim,
-            hidden_size=self.decoder.idim * 2,
-            layers=3,
-            output_size=voc_state_size,
-        )
+        self.voc_decoder = torch.nn.Linear(self.decoder.idim, voc_state_size)
 
     def forward(
         self,
