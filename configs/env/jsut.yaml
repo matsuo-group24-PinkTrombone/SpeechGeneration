@@ -1,0 +1,15 @@
+defaults:
+  - make_env.yaml
+
+dataset_dirs:
+  - data/jsut_ver1.1/basic5000/wav
+  - data/jsut_ver1.1/countersuffix26/wav
+  - data/jsut_ver1.1/loanword128/wav
+  - data/jsut_ver1.1/onomatopee300/wav
+  - data/jsut_ver1.1/precedent130/wav
+  - data/jsut_ver1.1/repeat500/wav
+  - data/jsut_ver1.1/travel1000/wav
+  - data/jsut_ver1.1/utparaphrase512/wav
+  - data/jsut_ver1.1/voiceactress100/wav
+
+default_frequency: 300.0
