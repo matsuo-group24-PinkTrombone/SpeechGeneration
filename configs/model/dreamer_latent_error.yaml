@@ -1,0 +1,4 @@
+defaults:
+  - dreamer.yaml
+
+_target_: src.models.dreamer_latent_error.Dreamer
