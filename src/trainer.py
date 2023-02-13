@@ -149,6 +149,10 @@ class Trainer:
         save_path = os.path.join(self.checkpoint_destination_path, file_name)
         self.save_checkpoint(save_path, model, world_optimizer, controller_optimizer)
 
+        loss_dict = model.evaluation_step(env)
+        log_loss = pformat(loss_dict)
+        logger.info(log_loss)
+
     def setup_model_attribute(self, model: Dreamer):
         """Add attribute for model training.
 

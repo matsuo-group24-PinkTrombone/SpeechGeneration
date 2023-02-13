@@ -1,0 +1,4 @@
+defaults:
+  - dreamer.yaml
+
+coef_latent_space_loss: 1.0
