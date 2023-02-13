@@ -224,10 +224,12 @@ def test_log():
         model.current_step = i
         model.log("test force logging", -i, force_logging=True)
 
-def test_log_mel_spect():
+def test_log_spectrogram():
     model = Dreamer(*args)
     model.tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_log"))
-    gen_melspect = np.random.rand(128, 256)
-    tgt_melspect = np.random.rand(128, 256)
+    shape = (128, 256)
+    gen_spect = np.random.rand(*shape)
+    tgt_spect = np.random.rand(*shape)
+    pred_gen_spect = np.random.rand(*shape)
     tag = "evaluation_step/mel_spect/test"
-    model.log_mel_spect(tag, tgt_melspect, gen_melspect)
+    model.log_spectrogram(tag, tgt_spect, gen_spect, pred_gen_spect)
