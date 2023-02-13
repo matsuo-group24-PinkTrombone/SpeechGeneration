@@ -484,17 +484,16 @@ class Dreamer(nn.Module):
         if force_logging or self.current_step % self.log_every_n_steps == 0:
             self.tensorboard.add_scalar(name, value, self.current_step)
     
-    def log_spectrogram(self, tag: str, target: np.ndarray, generated: np.ndarray, predicted_generated: np.ndarray) -> None:
+    def log_spectrogram(self, tag: str, target: np.ndarray, generated: np.ndarray, predicted_generated: np.ndarray, global_step: int) -> None:
         fig, axes = plt.subplots(3, 1)
         fig.tight_layout()
-        labels = {"xlabel": "timestamp", "ylabel": "Hz",}
+        labels = {"xlabel": "timestamp", "ylabel": "Hz"}
         
         data = {"Target": target, "Generated":generated, "Predicted Generated":predicted_generated}
         # show target mel spectrogram
         for i, (title, spect) in enumerate(data.items()):
-            mappable = axes[i].imshow(target)
+            mappable = axes[i].imshow(spect)
             axes[i].set(**labels, title=title)
-            axes[i].imshow(spect)
-            fig.colorbar(mappable, axes[i])
-
-        self.tensorboard.add_figure(tag, figure=fig)
+            fig.colorbar(mappable, ax=axes[i])
+        fig.savefig("dreamertest.png")
+        self.tensorboard.add_figure(tag, figure=fig, global_step=global_step)

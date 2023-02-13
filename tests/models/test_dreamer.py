@@ -228,8 +228,9 @@ def test_log_spectrogram():
     model = Dreamer(*args)
     model.tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_log"))
     shape = (128, 256)
-    gen_spect = np.random.rand(*shape)
+    gen_spect = np.random.randint(*shape)
     tgt_spect = np.random.rand(*shape)
     pred_gen_spect = np.random.rand(*shape)
     tag = "evaluation_step/mel_spect/test"
-    model.log_spectrogram(tag, tgt_spect, gen_spect, pred_gen_spect)
+    for i in range(3):
+        model.log_spectrogram(tag, tgt_spect, gen_spect, pred_gen_spect, global_step=i)
