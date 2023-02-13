@@ -3,6 +3,7 @@ from functools import partial
 from typing import Any
 
 import gym
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
@@ -482,3 +483,18 @@ class Dreamer(nn.Module):
 
         if force_logging or self.current_step % self.log_every_n_steps == 0:
             self.tensorboard.add_scalar(name, value, self.current_step)
+    
+    def log_mel_spect(self, tag: str, target: torch.Tensor, generated: torch.Tensor) -> None:
+        fig, axes = plt.subplots(2, 1)
+        labels = {"xlabel": "timestamp", "ylabel": "Hz",}
+        # show target mel spectrogram
+        mappable_tgt = axes[0].imshow(target)
+        axes[0].set(**labels, title="Target")
+        fig.colorbar(mappable_tgt, axes[0])
+
+        # show generated mel spectrogram
+        mappable_gen = axes[1].imshow(generated)
+        axes[1].set(**labels, title="Generated")
+        fig.colorbar(mappable_gen, axes[1])
+
+        self.tensorboard.add_figure(tag, figure=fig)
