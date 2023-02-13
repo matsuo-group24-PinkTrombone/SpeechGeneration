@@ -53,6 +53,8 @@ class Dreamer(nn.Module):
         evaluation_steps: int = 44 * 60,
         evaluation_blank_length: int = 44100,
         sample_rate: int = 44100,
+        coef_spectrogram_loss: float = 1.0,
+        coef_latent_space_loss: float = 0.0,
     ) -> None:
         """
         Args:
@@ -72,6 +74,9 @@ class Dreamer(nn.Module):
             evaluation_steps: Specifies the number of evaluations.
             evaluation_blank_length (int):The blank lengths of generated/target sound.
             sample_rate (int): The generation sampling rate of Vocal Tract Model.
+            coef_spectrogram_loss (float): Coefficient for loss between target and generated spectrogram. (default 1.0).
+            coef_latent_space_loss (float): Coefficient for loss on latent space between target and generated.
+                Default value is 0.0 for backward compatibility.
         """
 
         super().__init__()
@@ -100,6 +105,8 @@ class Dreamer(nn.Module):
         self.evaluation_steps = evaluation_steps
         self.evaluation_blank_length = evaluation_blank_length
         self.sample_rate = sample_rate
+        self.coef_spectrogram_loss = coef_spectrogram_loss
+        self.coef_latent_space_loss = coef_latent_space_loss
 
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
@@ -338,7 +345,8 @@ class Dreamer(nn.Module):
         )
         state = self.prior.forward(hidden).sample()
 
-        loss = 0.0
+        latent_space_loss = 0.0
+        spectrogram_loss = 0.0
         for horizon in range(self.imagination_horizon):
             indices = start_indices + horizon
             target = torch.as_tensor(
@@ -350,9 +358,17 @@ class Dreamer(nn.Module):
             next_hidden = self.transition.forward(hidden, state, action)
             next_state = self.prior.forward(next_hidden).sample()
             rec_next_obs = self.obs_decoder.forward(next_hidden, next_state)
-            _, rec_gened_sound = rec_next_obs
+            rec_voc_state, rec_gened_sound = rec_next_obs
 
-            loss += F.mse_loss(target, rec_gened_sound)
+            target_latent = self.obs_encoder.embed_observation((rec_voc_state, target))
+
+            rec_generated_latent = self.obs_encoder.embed_observation(
+                (rec_voc_state, rec_gened_sound)
+            )
+
+            spectrogram_loss += F.mse_loss(target, rec_gened_sound)
+
+            latent_space_loss += F.mse_loss(target_latent, rec_generated_latent)
 
             hidden = next_hidden
 
@@ -373,12 +389,23 @@ class Dreamer(nn.Module):
             )
             state = self.prior.forward(hidden).sample()
 
-        loss /= self.imagination_horizon
+        latent_space_loss /= self.imagination_horizon
+        spectrogram_loss /= self.imagination_horizon
+        loss = (
+            self.coef_spectrogram_loss * spectrogram_loss
+            + self.coef_latent_space_loss * latent_space_loss
+        )
 
-        loss_dict = {"loss": loss}
+        loss_dict = {
+            "loss": loss,
+            "spectrogram_loss": spectrogram_loss,
+            "latent_space_loss": latent_space_loss,
+        }
 
         prefix = "controller_training_step/"
         self.log(prefix + "loss", loss)
+        self.log(prefix + "spectrogram_loss", loss)
+        self.log(prefix + "latent_space_loss", latent_space_loss)
 
         return loss_dict, experiences
 

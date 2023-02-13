@@ -121,6 +121,9 @@ def test__init__():
         else:
             assert False, f"attribute {attrs[idx]} doesn't set"
 
+    assert model.coef_latent_space_loss == 0.0
+    assert model.coef_spectrogram_loss == 1.0
+
 
 def test_configure_optimizers():
     model = Dreamer(*args)
