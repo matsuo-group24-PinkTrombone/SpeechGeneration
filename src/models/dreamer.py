@@ -489,12 +489,12 @@ class Dreamer(nn.Module):
         fig.tight_layout()
         labels = {"xlabel": "timestamp", "ylabel": "Hz",}
         
-        titles = ("Target", "Generated", "Predicted Generated")
-        spects = (target, generated, predicted_generated)
+        data = {"Target": target, "Generated":generated, "Predicted Generated":predicted_generated}
         # show target mel spectrogram
-        for i, title in enumerate(titles):
+        for i, (title, spect) in enumerate(data.items()):
             mappable = axes[i].imshow(target)
             axes[i].set(**labels, title=title)
+            axes[i].imshow(spect)
             fig.colorbar(mappable, axes[i])
 
         self.tensorboard.add_figure(tag, figure=fig)
