@@ -31,14 +31,28 @@ class Agent(ABC):
         self.transition = transition
         self.obs_encoder = obs_encoder
 
-        self.hidden = torch.zeros(1, *transition.hidden_shape)
-        self.controller_hidden = torch.zeros(1, *controller.controller_hidden_shape)
+        hidden = torch.zeros(1, *transition.hidden_shape)
+        controller_hidden = torch.zeros(1, *controller.controller_hidden_shape)
 
         # Throw device location management to `nn.Module`.
-        self.transition.register_buffer("_hidden_of_agent", self.hidden, False)
-        self.controller.register_buffer(
-            "_controller_hidden_of_agent", self.controller_hidden, False
-        )
+        self.transition.register_buffer("_hidden_of_agent", hidden, False)
+        self.controller.register_buffer("_controller_hidden_of_agent", controller_hidden, False)
+
+    @property
+    def hidden(self) -> torch.Tensor:
+        return self.transition._hidden_of_agent
+
+    @hidden.setter
+    def hidden(self, hidden_of_agent: torch.Tensor) -> None:
+        self.transition._hidden_of_agent = hidden_of_agent
+
+    @property
+    def controller_hidden(self) -> torch.Tensor:
+        return self.controller._controller_hidden_of_agent
+
+    @controller_hidden.setter
+    def controller_hidden(self, controller_hidden_of_agent: torch.Tensor) -> None:
+        self.controller_hidden._controller_hidden_of_agent = controller_hidden_of_agent
 
     def act(
         self, obs: _tensor_or_any, target: _tensor_or_any, probabilistic: bool
@@ -52,8 +66,8 @@ class Agent(ABC):
         Returns:
             action (_tensor_or_any): Action for stepping environment.
         """
-        hidden = self.transition._hidden_of_agent
-        controller_hidden = self.controller._controller_hidden_of_agent
+        hidden = self.hidden
+        controller_hidden = self.controller_hidden
 
         state = self.obs_encoder.forward(hidden, obs).sample()
         action, controller_hidden = self.controller.forward(
@@ -61,10 +75,8 @@ class Agent(ABC):
         )
 
         # Update internal hidden state.
-        self.transition._hidden_of_agent = self.transition.forward(hidden, state, action)
-        self.controller._controller_hidden_of_agent = controller_hidden
-        self.hidden = self.transition._hidden_of_agent
-        self.controller_hidden = self.controller._controller_hidden_of_agent
+        self.hidden = self.transition.forward(hidden, state, action)
+        self.controller_hidden = controller_hidden
 
         return action
 
