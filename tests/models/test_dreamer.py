@@ -223,3 +223,11 @@ def test_log():
     for i in range(10):
         model.current_step = i
         model.log("test force logging", -i, force_logging=True)
+
+def test_log_mel_spect():
+    model = Dreamer(*args)
+    model.tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_log"))
+    gen_melspect = np.random.rand(128, 256)
+    tgt_melspect = np.random.rand(128, 256)
+    tag = "evaluation_step/mel_spect/test"
+    model.log_mel_spect(tag, tgt_melspect, gen_melspect)
