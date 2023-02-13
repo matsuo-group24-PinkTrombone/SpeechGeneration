@@ -1,4 +1,4 @@
 defaults:
   - dreamer.yaml
 
-_target_: src.models.dreamer_latent_error.Dreamer
+coef_latent_space_loss: 1.0
