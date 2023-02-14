@@ -35,3 +35,11 @@ docker-run:
         --gpus all \
         --mount type=volume,source=speech-generation,target=/workspace \
         speech-generation:latest
+
+docker-run-mount:
+	docker run -it \
+        --gpus all \
+        --mount type=volume,source=speech-generation,target=/workspace \
+		--mount type=bind,source=$(pwd)/data,target=/workspace/data \
+		--mount type=bind,source=$(pwd)/logs,target=/workspace/logs \
+        speech-generation:latest
