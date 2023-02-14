@@ -38,7 +38,7 @@ class LogMelSpectrogram(gym.ObservationWrapper):
         self.n_fft = n_fft
         self.n_mels = n_mels
         self.log_offset = log_offset
-        self.mel_filter_banck = librosa.filters.mel(
+        self.mel_filter_bank = librosa.filters.mel(
             sr=sample_rate, n_fft=n_fft, n_mels=n_mels, dtype=dtype
         )
 
@@ -85,4 +85,4 @@ class LogMelSpectrogram(gym.ObservationWrapper):
             log mel spectrogram (np.ndarray): log mel spectrogram
         """
 
-        return np.log(np.matmul(self.mel_filter_banck, spectrogram) + self.log_offset)
+        return np.log(np.matmul(self.mel_filter_bank, spectrogram) + self.log_offset)
