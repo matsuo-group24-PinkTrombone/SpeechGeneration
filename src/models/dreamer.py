@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from gym.spaces import Box
+from librosa.feature import melspectrogram
 from torch import Tensor
 from torch.distributions import kl_divergence
 from torch.optim import Optimizer
@@ -101,6 +102,8 @@ class Dreamer(nn.Module):
         self.evaluation_steps = evaluation_steps
         self.evaluation_blank_length = evaluation_blank_length
         self.sample_rate = sample_rate
+
+        self.evaluation_count = 0
 
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
@@ -392,6 +395,7 @@ class Dreamer(nn.Module):
         Returns:
             loss_dict (dict[str, Any]): Returned metric values.
         """
+        self.evaluation_count += 1
         self.world.eval()
         self.controller.eval()
 
@@ -408,6 +412,9 @@ class Dreamer(nn.Module):
         voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).unsqueeze(0)
         generated = torch.as_tensor(generated_np, dtype=dtype, device=device).unsqueeze(0)
         target = torch.as_tensor(target_np, dtype=dtype, device=device).unsqueeze(0)
+
+        hidden = torch.zeros(self.transition.hidden_shape)
+        controller_hidden = torch.zeros(self.controller.controller_hidden_shape)
 
         generated_sound_waves = []
         target_sound_waves = []
@@ -426,6 +433,17 @@ class Dreamer(nn.Module):
 
             generated_sound_waves.append(obs[ObsNames.GENERATED_SOUND_WAVE])
             generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
+            target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
+
+            # prediction by world model
+            state = self.prior(hidden).sample()
+            action, controller_hidden = self.controller(
+                hidden, state, target, controller_hidden, probabilistic=False
+            )
+            next_hidden = self.transition(hidden, state, action)
+            pred_obs = self.obs_decoder(hidden, state)
+            hidden = next_hidden
+            _, pred_gen = pred_obs
 
             target_generated_mse += np.mean((target_np - generated_np) ** 2)
             target_generated_mae += np.mean(np.abs(target_np - generated_np))
@@ -439,6 +457,9 @@ class Dreamer(nn.Module):
             voc_state_np = obs[ObsNames.VOC_STATE]
             generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
             target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
+
+            generated_mel = melspectrogram(S=generated)
+            target_mel = melspectrogram(S=target)
 
             voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).unsqueeze(0)
             generated = torch.as_tensor(generated_np, dtype=dtype, device=device).unsqueeze(0)
@@ -464,6 +485,14 @@ class Dreamer(nn.Module):
         self.log(prefix + "target generated mse", float(target_generated_mse), True)
         self.log(prefix + "target generated mae", float(target_generated_mae), True)
 
+        self.log_spectrogram(
+            prefix + "melspectrograms",
+            target_mel.squeeze(0),
+            generated_mel.squeeze(0),
+            pred_gen,
+            global_step=self.evaluation_count * i,
+        )
+
         loss_dict = {
             "target_generated_mse": target_generated_mse,
             "target_generated_mae": target_generated_mae,
@@ -483,13 +512,24 @@ class Dreamer(nn.Module):
 
         if force_logging or self.current_step % self.log_every_n_steps == 0:
             self.tensorboard.add_scalar(name, value, self.current_step)
-    
-    def log_spectrogram(self, tag: str, target: np.ndarray, generated: np.ndarray, predicted_generated: np.ndarray, global_step: int) -> None:
+
+    def log_spectrogram(
+        self,
+        tag: str,
+        target: np.ndarray,
+        generated: np.ndarray,
+        predicted_generated: np.ndarray,
+        global_step: int,
+    ) -> None:
         fig, axes = plt.subplots(3, 1)
         fig.tight_layout()
         labels = {"xlabel": "timestamp", "ylabel": "Hz"}
-        
-        data = {"Target": target, "Generated":generated, "Predicted Generated":predicted_generated}
+
+        data = {
+            "Target": target,
+            "Generated": generated,
+            "Predicted Generated": predicted_generated,
+        }
         # show target mel spectrogram
         for i, (title, spect) in enumerate(data.items()):
             mappable = axes[i].imshow(spect)
