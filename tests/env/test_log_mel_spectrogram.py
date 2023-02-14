@@ -89,3 +89,12 @@ def test_log_mel():
     np.testing.assert_allclose(zero_logmel, np.log(1e-6))
 
     del env
+
+
+def test_reset_and_step():
+    env = PynkTrombone(SAMPLE_TARGET_SOUND_FILE_PATHS)
+    wrapper = LogMelSpectrogram(env, env.sample_rate, env.stft_window_size)
+    wrapper.reset()
+
+    action = env.action_space.sample()
+    env.step(action)
