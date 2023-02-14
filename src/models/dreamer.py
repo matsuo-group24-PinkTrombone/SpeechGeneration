@@ -458,9 +458,6 @@ class Dreamer(nn.Module):
             generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
             target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
 
-            generated_mel = melspectrogram(S=generated)
-            target_mel = melspectrogram(S=target)
-
             voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).unsqueeze(0)
             generated = torch.as_tensor(generated_np, dtype=dtype, device=device).unsqueeze(0)
             target = torch.as_tensor(target_np, dtype=dtype, device=device).unsqueeze(0)
@@ -487,8 +484,8 @@ class Dreamer(nn.Module):
 
         self.log_spectrogram(
             prefix + "melspectrograms",
-            target_mel.squeeze(0),
-            generated_mel.squeeze(0),
+            target.squeeze(0),
+            generated.squeeze(0),
             pred_gen,
             global_step=self.evaluation_count * i,
         )
