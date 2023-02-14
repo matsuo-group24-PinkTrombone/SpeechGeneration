@@ -7,12 +7,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchaudio.functional as audioF
 from gym.spaces import Box
 from torch import Tensor
 from torch.distributions import kl_divergence
 from torch.optim import Optimizer
 from torch.utils.tensorboard import SummaryWriter
-import torchaudio.functional as audioF
 
 from ..datamodules import buffer_names
 from ..datamodules.replay_buffer import ReplayBuffer
@@ -123,7 +123,7 @@ class Dreamer(nn.Module):
         self.mfcc_lifter_size = mfcc_lifter_size
 
         self.dct_mat: Tensor
-        self.register_buffer("dct_mat",audioF.create_dct(n_mfcc, n_mels, mfcc_dct_norm), False)
+        self.register_buffer("dct_mat", audioF.create_dct(n_mfcc, n_mels, mfcc_dct_norm), False)
 
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
