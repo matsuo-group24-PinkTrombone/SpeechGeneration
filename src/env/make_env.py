@@ -3,10 +3,12 @@ from typing import Any, List, Optional
 
 import gym
 import numpy as np
-from pynktrombonegym.wrappers import ActionByAcceleration, Log1pMelSpectrogram
+from pynktrombonegym.env import PynkTrombone
+from pynktrombonegym.wrappers import ActionByAcceleration
 
 from .array_action import ArrayAction
 from .array_voc_state import ArrayVocState
+from .log_mel_spectrogram import LogMelSpectrogram
 from .normalize_action_range import NormalizeActionRange
 
 
@@ -20,6 +22,7 @@ def make_env(
     n_mels: int = 80,
     dtype: Any = np.float32,
     default_frequency: float = 400.0,
+    log_offset: float = 1e-6,
 ) -> gym.Env:
     """Creates an wrapped environment instance from a list of audio dir paths.
 
@@ -33,23 +36,30 @@ def make_env(
         n_mels (int): The number of mel bands to generate. Default is 80.
         dtype (Any): The data type of the audio. Default is np.float32.
         default_frequency (float): Default vocal tract frequency.
+        log_offset (float): Minimum amplitude of spectrogram to avoid -inf.
 
     Returns:
         gym.Env: The created environment instance.
     """
     files = create_file_list(dataset_dirs, file_exts)
 
-    base_env = Log1pMelSpectrogram(
+    base_env = PynkTrombone(
         files,
         sample_rate=sample_rate,
-        n_mels=n_mels,
-        dtype=dtype,
         default_frequency=default_frequency,
     )
 
     if action_scaler is None:
         action_scaler = base_env.generate_chunk / base_env.sample_rate
-    env = apply_wrappers(base_env, action_scaler, low, high)
+
+    env = LogMelSpectrogram(
+        base_env, sample_rate, base_env.stft_window_size, n_mels, log_offset, dtype
+    )
+    env = ActionByAcceleration(env, action_scaler=action_scaler)
+    env = NormalizeActionRange(env, low=low, high=high)
+    env = ArrayAction(env)
+    env = ArrayVocState(env)
+
     return env
 
 
@@ -77,22 +87,3 @@ def create_file_list(dataset_dirs: List[Any], file_exts: List[str]) -> List[str]
         else:
             raise ValueError(f"{dataset_dir} is not a directory or does not exist.")
     return files
-
-
-def apply_wrappers(env: gym.Env, action_scaler: float, low: float, high: float) -> gym.Env:
-    """Apply wrappers to the environment.
-
-    Args:
-        env (gym.Env): PynkTromboneGym Env or its wrapper.
-        action_scaler: float: The scaling factor of action.
-        low (float): The lowest value of normalized action.
-        high (float): The highest value of normalized action.
-
-    Returns:
-        gym.Env: The environment with applied wrappers.
-    """
-    env = ActionByAcceleration(env, action_scaler=action_scaler)
-    env = NormalizeActionRange(env, low=low, high=high)
-    env = ArrayAction(env)
-    env = ArrayVocState(env)
-    return env
