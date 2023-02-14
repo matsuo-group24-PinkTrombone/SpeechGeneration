@@ -18,7 +18,7 @@ def make_spectrogram_figure(
     }
     # show target mel spectrogram
     for i, (title, spect) in enumerate(data.items()):
-        mappable = axes[i].imshow(spect)
+        mappable = axes[i].imshow(spect, aspect="auto")
         axes[i].set(**labels, title=title)
         fig.colorbar(mappable, ax=axes[i])
     
