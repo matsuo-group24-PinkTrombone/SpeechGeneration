@@ -522,6 +522,7 @@ class Dreamer(nn.Module):
         global_step: int,
     ) -> None:
         fig, axes = plt.subplots(3, 1)
+        fig.set_figheight(10)
         fig.tight_layout()
         labels = {"xlabel": "timestamp", "ylabel": "Hz"}
 
@@ -535,5 +536,4 @@ class Dreamer(nn.Module):
             mappable = axes[i].imshow(spect)
             axes[i].set(**labels, title=title)
             fig.colorbar(mappable, ax=axes[i])
-        fig.savefig("dreamertest.png")
         self.tensorboard.add_figure(tag, figure=fig, global_step=global_step)
