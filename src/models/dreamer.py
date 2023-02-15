@@ -19,7 +19,7 @@ from ..datamodules import buffer_names
 from ..datamodules.replay_buffer import ReplayBuffer
 from ..env.array_voc_state import VocStateObsNames as ObsNames
 from ..env.array_voc_state import VocStateObsNames as VSON
-from ..utils.visualize import make_spectrogram_figure
+from ..utils.visualize import make_spectrogram_figure, visualize_model_approximation
 from .abc.agent import Agent
 from .abc.controller import Controller
 from .abc.observation_auto_encoder import ObservationDecoder, ObservationEncoder
@@ -413,9 +413,6 @@ class Dreamer(nn.Module):
         generated = torch.as_tensor(generated_np, dtype=dtype, device=device).unsqueeze(0)
         target = torch.as_tensor(target_np, dtype=dtype, device=device).unsqueeze(0)
 
-        hidden = torch.zeros(self.agent.hidden)
-        controller_hidden = torch.zeros(self.agent.controller_hidden)
-
         generated_sound_waves = []
         target_sound_waves = []
 
@@ -476,6 +473,15 @@ class Dreamer(nn.Module):
             "target_generated_mse": target_generated_mse,
             "target_generated_mae": target_generated_mae,
         }
+
+        visualize_model_approximation(
+            self.world,
+            self.agent,
+            env,
+            self.tensorboard,
+            prefix + "melspectrograms",
+            self.current_step,
+        )
 
         return loss_dict
 

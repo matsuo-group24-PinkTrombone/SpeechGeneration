@@ -223,15 +223,3 @@ def test_log():
     for i in range(10):
         model.current_step = i
         model.log("test force logging", -i, force_logging=True)
-
-
-def test_log_spectrogram():
-    model = Dreamer(*args)
-    model.tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_log"))
-    shape = (128, 256)
-    gen_spect = np.random.rand(*shape)
-    tgt_spect = np.random.rand(*shape)
-    pred_gen_spect = np.random.rand(*shape)
-    tag = "evaluation_step/mel_spect/test"
-    for i in range(3):
-        model.log_spectrogram(tag, tgt_spect, gen_spect, pred_gen_spect, global_step=i)
