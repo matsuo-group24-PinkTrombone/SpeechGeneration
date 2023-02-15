@@ -2,12 +2,13 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.utils.tensorboard import SummaryWriter
 from librosa.feature import melspectrogram
+from torch.utils.tensorboard import SummaryWriter
 
 from ..env.array_voc_state import VocStateObsNames as ObsNames
 from ..models.abc.agent import Agent
 from ..models.abc.world import World
+
 
 def make_spectrogram_figure(
     target: np.ndarray,
@@ -42,7 +43,7 @@ def visualize_model_approximation(
     visualize_per_episode: bool = True,
     visualize_steps: int = None,
     dtype: torch.dtype = torch.float32,
-    device: str = "cpu"
+    device: str = "cpu",
 ) -> None:
     """
     Args:
@@ -57,7 +58,7 @@ def visualize_model_approximation(
     all_generated_ref = []
     all_generated_pred = []
     obs = env.reset()
-    
+
     target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
     voc_state_np = obs[ObsNames.VOC_STATE]
     generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
@@ -79,18 +80,20 @@ def visualize_model_approximation(
             action = agent.act(obs=(voc_state, generated_ref), target=target, probabilistic=False)
             action = action.cpu().squeeze(0).numpy()
             obs, _, done, _ = env.step(action)
-            
+
             all_generated_ref.append(obs[ObsNames.GENERATED_SOUND_SPECTROGRAM])
-            
+
             generated_ref_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
             voc_state_np = obs[ObsNames.VOC_STATE]
             target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
 
             # append prediction by world model
             state = world.prior(hidden).sample()
-            action, controller_hidden = agent.controller(hidden, state, target, controller_hidden, False)
-            generated_pred = world.obs_decoder(hidden, state)
-            all_generated_pred.append(generated_pred)
+            action, controller_hidden = agent.controller(
+                hidden, state, target, controller_hidden, False
+            )
+            _, generated_pred = world.obs_decoder(hidden, state)
+            all_generated_pred.append(generated_pred.cpu().numpy())
             next_hidden = world.transition(hidden, state, action)
 
             hidden = next_hidden
@@ -101,6 +104,6 @@ def visualize_model_approximation(
         target_spect = np.concatenate(all_target, axis=-1)
         generated_ref_spect = np.concatenate(all_generated_ref, axis=-1)
         generated_pred_spect = np.concatenate(all_generated_pred, axis=-1)
-        
+
         fig = make_spectrogram_figure(target_spect, generated_ref_spect, generated_pred_spect)
         tensorboard.add_figure(tag, fig, global_step=global_step)
