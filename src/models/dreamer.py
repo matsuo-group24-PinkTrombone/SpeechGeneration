@@ -19,13 +19,14 @@ from ..datamodules import buffer_names
 from ..datamodules.replay_buffer import ReplayBuffer
 from ..env.array_voc_state import VocStateObsNames as ObsNames
 from ..env.array_voc_state import VocStateObsNames as VSON
+from ..utils.visualize import make_spectrogram_figure
 from .abc.agent import Agent
 from .abc.controller import Controller
 from .abc.observation_auto_encoder import ObservationDecoder, ObservationEncoder
 from .abc.prior import Prior
 from .abc.transition import Transition
 from .abc.world import World
-from ..utils.log import make_spectrogram_figure
+
 
 class Dreamer(nn.Module):
     """Dreamer model class."""
@@ -490,12 +491,3 @@ class Dreamer(nn.Module):
 
         if force_logging or self.current_step % self.log_every_n_steps == 0:
             self.tensorboard.add_scalar(name, value, self.current_step)
-
-    def visualize_world(
-        self,
-        target: np.ndarray,
-        generated_ref: np.ndarray,
-        ) -> None:
-        generated_pred = None
-        fig = make_spectrogram_figure(target, generated_ref, generated_pred)
-        self.tensorboard.add_figure(figure=fig, global_step=self.current_step)
