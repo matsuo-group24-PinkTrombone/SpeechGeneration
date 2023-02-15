@@ -106,8 +106,8 @@ class DummyObservationDecoder(ObservationDecoder):
         self.dmy_w = nn.Parameter(torch.zeros(8))
 
     def forward(self, hidden: Tensor, state: Tensor) -> Tensor:
-        vs_shape = (hidden.size(0), *self._voc_state_shape)
-        gs_shape = (hidden.size(0), *self._generated_sound_shape)
+        vs_shape = (*self._voc_state_shape,)
+        gs_shape = (*self._generated_sound_shape,)
         vs, gs = torch.randn(vs_shape, requires_grad=True).type_as(hidden), torch.randn(
             gs_shape, requires_grad=True
         ).type_as(hidden)
