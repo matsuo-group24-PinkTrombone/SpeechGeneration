@@ -478,7 +478,7 @@ class Dreamer(nn.Module):
             prefix + "melspectrograms",
             self.current_step,
             device=self.device,
-            dtype=self.dtype
+            dtype=self.dtype,
         )
 
         return loss_dict
