@@ -9,7 +9,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from gym.spaces import Box
-from librosa.feature import melspectrogram
 from torch import Tensor
 from torch.distributions import kl_divergence
 from torch.optim import Optimizer
@@ -19,7 +18,7 @@ from ..datamodules import buffer_names
 from ..datamodules.replay_buffer import ReplayBuffer
 from ..env.array_voc_state import VocStateObsNames as ObsNames
 from ..env.array_voc_state import VocStateObsNames as VSON
-from ..utils.visualize import make_spectrogram_figure, visualize_model_approximation
+from ..utils.visualize import visualize_model_approximation
 from .abc.agent import Agent
 from .abc.controller import Controller
 from .abc.observation_auto_encoder import ObservationDecoder, ObservationEncoder
@@ -103,8 +102,6 @@ class Dreamer(nn.Module):
         self.evaluation_steps = evaluation_steps
         self.evaluation_blank_length = evaluation_blank_length
         self.sample_rate = sample_rate
-
-        self.evaluation_count = 0
 
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
@@ -430,7 +427,6 @@ class Dreamer(nn.Module):
 
             generated_sound_waves.append(obs[ObsNames.GENERATED_SOUND_WAVE])
             generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
-            target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
 
             target_generated_mse += np.mean((target_np - generated_np) ** 2)
             target_generated_mae += np.mean(np.abs(target_np - generated_np))
