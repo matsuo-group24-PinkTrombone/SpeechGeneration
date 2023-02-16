@@ -477,6 +477,8 @@ class Dreamer(nn.Module):
             self.tensorboard,
             prefix + "melspectrograms",
             self.current_step,
+            device=self.device,
+            dtype=self.dtype
         )
 
         return loss_dict
