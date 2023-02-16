@@ -475,7 +475,7 @@ class Dreamer(nn.Module):
             self.agent,
             env,
             self.tensorboard,
-            prefix + "melspectrograms",
+            prefix + "target-generatino-imagination-spectrograms",
             self.current_step,
             device=self.device,
             dtype=self.dtype,
