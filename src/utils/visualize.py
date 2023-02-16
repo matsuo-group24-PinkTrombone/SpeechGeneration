@@ -33,6 +33,7 @@ def make_spectrogram_figure(
     return fig
 
 
+@torch.no_grad()
 def visualize_model_approximation(
     world: World,
     agent: Agent,
