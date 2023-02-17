@@ -99,6 +99,8 @@ def visualize_model_approximation(
         target = torch.as_tensor(target_np, dtype=dtype, device=device)
         voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device)
 
+        action = agent.act(obs=(voc_state, generated_ref), target=target, probabilistic=False)
+
     target_spect = np.concatenate(all_target, axis=-1)
     generated_ref_spect = np.concatenate(all_generated_ref, axis=-1)
     generated_pred_spect = np.concatenate(all_generated_pred, axis=-1).squeeze(0)
