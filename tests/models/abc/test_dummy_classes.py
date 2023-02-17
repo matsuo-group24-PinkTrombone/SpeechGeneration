@@ -59,8 +59,8 @@ def test_DummyObservationDecoder():
     obj = cls(voc_state_shape, generated_sound_shape)
 
     out_v, out_g = obj.forward(hidden, state)
-    assert (batch_size, *out_v.shape) == voc_state.shape
-    assert (batch_size, *out_g.shape) == generated_sound.shape
+    assert out_v.shape == voc_state.shape
+    assert out_g.shape == generated_sound.shape
 
 
 def test_DummyController():
