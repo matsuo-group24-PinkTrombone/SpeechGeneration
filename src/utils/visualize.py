@@ -104,7 +104,7 @@ def visualize_model_approximation(
 
         target_spect = np.concatenate(all_target, axis=-1)
         generated_ref_spect = np.concatenate(all_generated_ref, axis=-1)
-        generated_pred_spect = np.concatenate(all_generated_pred, axis=-1)
+        generated_pred_spect = np.concatenate(all_generated_pred, axis=-1).squeeze(0)
 
         fig = make_spectrogram_figure(target_spect, generated_ref_spect, generated_pred_spect)
         tensorboard.add_figure(tag, fig, global_step=global_step)
