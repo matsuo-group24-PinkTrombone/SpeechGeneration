@@ -74,21 +74,21 @@ def visualize_model_approximation(
     agent.reset()
     hidden = agent.hidden  # h_0
 
-    action = agent.act(obs=(voc_state, generated_ref), target=target, probabilistic=False)  # a_0
-    action = action.squeeze(0) # Remove batch dim
-
     done = False
     while not done:
         all_target.append(target)  # T_t+1
 
         # append prediction by world model
+        action = agent.act(
+            obs=(voc_state, generated_ref), target=target, probabilistic=False
+        )  # a_t
         hidden = world.transition(hidden, state, action)  # h_t+1
         state = world.prior(hidden).sample()  # s_t+1
         _, generated_pred = world.obs_decoder(hidden, state)  # g_t+1(pred)
         all_generated_pred.append(generated_pred.cpu().numpy())
 
         # append generated from env
-        obs, _, done, _ = env.step(action.cpu().numpy())  # o_t+1
+        obs, _, done, _ = env.step(action.squeeze(0).cpu().numpy())  # o_t+1
 
         all_generated_ref.append(obs[ObsNames.GENERATED_SOUND_SPECTROGRAM])
 
@@ -99,9 +99,6 @@ def visualize_model_approximation(
         generated_ref = torch.as_tensor(generated_ref_np, dtype=dtype, device=device)
         target = torch.as_tensor(target_np, dtype=dtype, device=device)
         voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device)
-
-        action = agent.act(obs=(voc_state, generated_ref), target=target, probabilistic=False)
-        action = action.squeeze(0) # Remove batch dim
 
     target_spect = np.concatenate(all_target, axis=-1)
     generated_ref_spect = np.concatenate(all_generated_ref, axis=-1)
