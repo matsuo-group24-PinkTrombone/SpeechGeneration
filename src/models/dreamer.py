@@ -535,7 +535,7 @@ class Dreamer(nn.Module):
             self.agent,
             env,
             self.tensorboard,
-            prefix + "target-generatino-imagination-spectrograms",
+            prefix + "target-generation-imagination-spectrograms",
             self.current_step,
             device=self.device,
             dtype=self.dtype,
