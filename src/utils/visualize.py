@@ -75,6 +75,7 @@ def visualize_model_approximation(
     hidden = agent.hidden  # h_0
 
     action = agent.act(obs=(voc_state, generated_ref), target=target, probabilistic=False)  # a_0
+    action = action.squeeze(0) # Remove batch dim
 
     done = False
     while not done:
@@ -87,7 +88,7 @@ def visualize_model_approximation(
         all_generated_pred.append(generated_pred.cpu().numpy())
 
         # append generated from env
-        obs, _, done, _ = env.step(action)  # o_t+1
+        obs, _, done, _ = env.step(action.cpu().numpy())  # o_t+1
 
         all_generated_ref.append(obs[ObsNames.GENERATED_SOUND_SPECTROGRAM])
 
@@ -100,6 +101,7 @@ def visualize_model_approximation(
         voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device)
 
         action = agent.act(obs=(voc_state, generated_ref), target=target, probabilistic=False)
+        action = action.squeeze(0) # Remove batch dim
 
     target_spect = np.concatenate(all_target, axis=-1)
     generated_ref_spect = np.concatenate(all_generated_ref, axis=-1)
