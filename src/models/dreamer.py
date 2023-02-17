@@ -3,6 +3,7 @@ from functools import partial
 from typing import Any, Optional
 
 import gym
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
@@ -18,6 +19,7 @@ from ..datamodules import buffer_names
 from ..datamodules.replay_buffer import ReplayBuffer
 from ..env.array_voc_state import VocStateObsNames as ObsNames
 from ..env.array_voc_state import VocStateObsNames as VSON
+from ..utils.visualize import visualize_model_approximation
 from .abc.agent import Agent
 from .abc.controller import Controller
 from .abc.observation_auto_encoder import ObservationDecoder, ObservationEncoder
@@ -527,6 +529,17 @@ class Dreamer(nn.Module):
             "target_generated_mse": target_generated_mse,
             "target_generated_mae": target_generated_mae,
         }
+
+        visualize_model_approximation(
+            self.world,
+            self.agent,
+            env,
+            self.tensorboard,
+            prefix + "target-generatino-imagination-spectrograms",
+            self.current_step,
+            device=self.device,
+            dtype=self.dtype,
+        )
 
         return loss_dict
 
