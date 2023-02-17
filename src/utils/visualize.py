@@ -64,47 +64,44 @@ def visualize_model_approximation(
     voc_state_np = obs[ObsNames.VOC_STATE]
     generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
 
-    target = torch.as_tensor(target_np, dtype=dtype, device=device)
-    voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device)
-    generated_ref = torch.as_tensor(generated_np, dtype=dtype, device=device)
+    target = torch.as_tensor(target_np, dtype=dtype, device=device) #t_1
+    voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device) #v_0
+    generated_ref = torch.as_tensor(generated_np, dtype=dtype, device=device) # g_0
+
+    state = torch.zeros(world.prior.state_shape, dtype=dtype, device=device) # s_0
 
     # init hidden for world model's prediction
-    controller_hidden = agent.controller_hidden
-    hidden = agent.hidden
+    agent.reset()
+    hidden = agent.hidden # h_0
+
+    action = agent.act(obs=(voc_state, generated_ref), target=target, probabilistic=False) # a_0
 
     done = False
-    with torch.no_grad():
-        while not done:
-            # append generated from env and target
-            all_target.append(obs[ObsNames.GENERATED_SOUND_SPECTROGRAM])
+    while not done:
+        all_target.append(target) # T_t+1
 
-            action = agent.act(obs=(voc_state, generated_ref), target=target, probabilistic=False)
-            action = action.cpu().squeeze(0).numpy()
-            obs, _, done, _ = env.step(action)
+        # append prediction by world model
+        hidden = world.transition(hidden, state, action) #h_t+1
+        state = world.prior(hidden).sample() # s_t+1
+        _, generated_pred = world.obs_decoder(hidden, state) # g_t+1(pred)
+        all_generated_pred.append(generated_pred.cpu().numpy()) 
+        
+        # append generated from env
+        obs, _, done, _ = env.step(action) # o_t+1
 
-            all_generated_ref.append(obs[ObsNames.GENERATED_SOUND_SPECTROGRAM])
+        all_generated_ref.append(obs[ObsNames.GENERATED_SOUND_SPECTROGRAM])
 
-            generated_ref_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
-            voc_state_np = obs[ObsNames.VOC_STATE]
-            target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
+        generated_ref_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM] # g_t+1(ref)
+        voc_state_np = obs[ObsNames.VOC_STATE]
+        target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM] # T_t+2
 
-            # append prediction by world model
-            state = world.prior(hidden).sample()
-            action, controller_hidden = agent.controller(
-                hidden, state, target, controller_hidden, False
-            )
-            _, generated_pred = world.obs_decoder(hidden, state)
-            all_generated_pred.append(generated_pred.cpu().numpy())
-            next_hidden = world.transition(hidden, state, action)
+        generated_ref = torch.as_tensor(generated_ref_np, dtype=dtype, device=device)
+        target = torch.as_tensor(target_np, dtype=dtype, device=device)
+        voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device)
 
-            hidden = next_hidden
-            generated_ref = torch.as_tensor(generated_ref_np, dtype=dtype, device=device)
-            target = torch.as_tensor(target_np, dtype=dtype, device=device)
-            voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device)
+    target_spect = np.concatenate(all_target, axis=-1)
+    generated_ref_spect = np.concatenate(all_generated_ref, axis=-1)
+    generated_pred_spect = np.concatenate(all_generated_pred, axis=-1).squeeze(0)
 
-        target_spect = np.concatenate(all_target, axis=-1)
-        generated_ref_spect = np.concatenate(all_generated_ref, axis=-1)
-        generated_pred_spect = np.concatenate(all_generated_pred, axis=-1).squeeze(0)
-
-        fig = make_spectrogram_figure(target_spect, generated_ref_spect, generated_pred_spect)
-        tensorboard.add_figure(tag, fig, global_step=global_step)
+    fig = make_spectrogram_figure(target_spect, generated_ref_spect, generated_pred_spect)
+    tensorboard.add_figure(tag, fig, global_step=global_step)
