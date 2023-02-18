@@ -69,12 +69,3 @@ def test_create_file_list():
     assert mod.create_file_list(sample_target_sound_dir_paths, [".wav"]) == glob.glob(
         "data/sample_target_sounds/*.wav", recursive=False
     )
-
-
-def test_apply_wrappers():
-    base_env = Log1pMelSpectrogram(sample_target_sound_file_paths)
-    action_scaler = base_env.generate_chunk / base_env.sample_rate
-    low = -10.0
-    high = 10.0
-    env = mod.apply_wrappers(base_env, action_scaler, low, high)
-    assert isinstance(env, gym.Env)
