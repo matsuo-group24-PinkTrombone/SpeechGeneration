@@ -79,8 +79,8 @@ tb_log_dir = f"logs/test_visualize/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 def test_make_spectrogram_figure():
     model = Dreamer(*args)
     model.tensorboard = SummaryWriter(os.path.join(tb_log_dir, "test_log"))
-    shape = (128, 256)
-    spectrograms = (np.random.rand(*shape) for _ in range(4))
+    shape = (80, 1024)
+    spectrograms = [np.random.rand(*shape) for _ in range(4)]
     tag = "evaluation_step/mel_spect/test"
     for i in range(3):
         fig: plt.figure = make_spectrogram_figure(*spectrograms)
