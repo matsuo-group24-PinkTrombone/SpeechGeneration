@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from functools import partial
-from typing import Any
+from typing import Any, Optional
 
 import gym
 import matplotlib.pyplot as plt
@@ -8,6 +8,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchaudio.functional as audioF
 from gym.spaces import Box
 from torch import Tensor
 from torch.distributions import kl_divergence
@@ -57,6 +58,11 @@ class Dreamer(nn.Module):
         sample_rate: int = 44100,
         coef_spectrogram_loss: float = 1.0,
         coef_latent_space_loss: float = 0.0,
+        coef_mfcc_loss: float = 0.0,
+        n_mfcc: int = 40,
+        n_mels: int = 80,
+        mfcc_dct_norm: Optional[str] = "ortho",
+        mfcc_lifter_size: int = 12,
     ) -> None:
         """
         Args:
@@ -79,6 +85,12 @@ class Dreamer(nn.Module):
             coef_spectrogram_loss (float): Coefficient for loss between target and generated spectrogram. (default 1.0).
             coef_latent_space_loss (float): Coefficient for loss on latent space between target and generated.
                 Default value is 0.0 for backward compatibility.
+            coef_mfcc_loss (float): Coefficient for loss between target and generated mfcc.
+                Default value is 0.0 for backward compatibility.
+            n_mfcc (int): MFCC channels size.
+            n_mels (int): Mel Spectrogram channel size.
+            mfcc_dct_norm (Optional[str]): Following to torchaudio MFCC implementation.
+            mfcc_lifter_size (int): Low path filter for mfcc loss
         """
 
         super().__init__()
@@ -109,6 +121,11 @@ class Dreamer(nn.Module):
         self.sample_rate = sample_rate
         self.coef_spectrogram_loss = coef_spectrogram_loss
         self.coef_latent_space_loss = coef_latent_space_loss
+        self.coef_mfcc_loss = coef_mfcc_loss
+        self.mfcc_lifter_size = mfcc_lifter_size
+
+        self.dct_mat: Tensor
+        self.register_buffer("dct_mat", audioF.create_dct(n_mfcc, n_mels, mfcc_dct_norm), False)
 
     def configure_optimizers(self) -> tuple[Optimizer, Optimizer]:
         """Configure world optimizer and controller optimizer.
@@ -349,6 +366,7 @@ class Dreamer(nn.Module):
 
         latent_space_loss = 0.0
         spectrogram_loss = 0.0
+        mfcc_loss = 0.0
         for horizon in range(self.imagination_horizon):
             indices = start_indices + horizon
             target = torch.as_tensor(
@@ -372,6 +390,16 @@ class Dreamer(nn.Module):
 
             latent_space_loss += F.mse_loss(target_latent, rec_generated_latent)
 
+            # MFCC loss
+            # shape: (B, C, L) -> (B, L, C) -> (C, L, B)
+            target_mfcc = (target.transpose(-1, -2) @ self.dct_mat).transpose(-1, 0)[
+                : self.mfcc_lifter_size
+            ]
+            rec_gened_mfcc = (rec_gened_sound.transpose(-1, -2) @ self.dct_mat).transpose(-1, 0)[
+                : self.mfcc_lifter_size
+            ]
+            mfcc_loss += F.mse_loss(target_mfcc, rec_gened_mfcc)
+
             hidden = next_hidden
 
             is_done = dones[indices, batch_arange].reshape(-1)
@@ -393,21 +421,26 @@ class Dreamer(nn.Module):
 
         latent_space_loss /= self.imagination_horizon
         spectrogram_loss /= self.imagination_horizon
+        mfcc_loss /= self.imagination_horizon
+
         loss = (
             self.coef_spectrogram_loss * spectrogram_loss
             + self.coef_latent_space_loss * latent_space_loss
+            + self.coef_mfcc_loss * mfcc_loss
         )
 
         loss_dict = {
             "loss": loss,
             "spectrogram_loss": spectrogram_loss,
             "latent_space_loss": latent_space_loss,
+            "mfcc_loss": mfcc_loss,
         }
 
         prefix = "controller_training_step/"
         self.log(prefix + "loss", loss)
         self.log(prefix + "spectrogram_loss", loss)
         self.log(prefix + "latent_space_loss", latent_space_loss)
+        self.log(prefix + "mfcc_loss", mfcc_loss)
 
         return loss_dict, experiences
 
@@ -502,7 +535,7 @@ class Dreamer(nn.Module):
             self.agent,
             env,
             self.tensorboard,
-            prefix + "target-generatino-imagination-spectrograms",
+            prefix + "target-generation-imagination-spectrograms",
             self.current_step,
             device=self.device,
             dtype=self.dtype,

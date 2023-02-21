@@ -7,6 +7,7 @@ from functools import partial
 import numpy as np
 import pytest
 import torch
+import torchaudio
 from gym.spaces import Box
 from pynktrombonegym.spaces import ObservationSpaceNames as OSN
 from pynktrombonegym.wrappers import ActionByAcceleration as ABA
@@ -121,8 +122,19 @@ def test__init__():
         else:
             assert False, f"attribute {attrs[idx]} doesn't set"
 
+    n_mfcc = 40
+    n_mels = 80
+    norm = "ortho"
     assert model.coef_latent_space_loss == 0.0
     assert model.coef_spectrogram_loss == 1.0
+    assert model.coef_mfcc_loss == 0.0
+    assert model.mfcc_lifter_size == 12
+
+    n_mfcc = 40
+    n_mels = 80
+    norm = "ortho"
+    dct_mat = torchaudio.functional.create_dct(n_mfcc, n_mels, norm)
+    torch.testing.assert_allclose(model.dct_mat, dct_mat)
 
 
 def test_configure_optimizers():

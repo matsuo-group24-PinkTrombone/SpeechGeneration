@@ -64,11 +64,11 @@ def visualize_model_approximation(
     voc_state_np = obs[ObsNames.VOC_STATE]
     generated_np = obs[ObsNames.GENERATED_SOUND_SPECTROGRAM]
 
-    target = torch.as_tensor(target_np, dtype=dtype, device=device)  # t_1
-    voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device)  # v_0
-    generated_ref = torch.as_tensor(generated_np, dtype=dtype, device=device)  # g_0
+    target = torch.as_tensor(target_np, dtype=dtype, device=device).unsqueeze(0)  # t_1
+    voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).unsqueeze(0)  # v_0
+    generated_ref = torch.as_tensor(generated_np, dtype=dtype, device=device).unsqueeze(0)  # g_0
 
-    state = torch.zeros(world.prior.state_shape, dtype=dtype, device=device)  # s_0
+    state = torch.zeros((1, *world.prior.state_shape), dtype=dtype, device=device)  # s_0
 
     # init hidden for world model's prediction
     agent.reset()
@@ -76,7 +76,7 @@ def visualize_model_approximation(
 
     done = False
     while not done:
-        all_target.append(target)  # T_t+1
+        all_target.append(target_np)  # T_t+1
 
         # append prediction by world model
         action = agent.act(
@@ -96,9 +96,9 @@ def visualize_model_approximation(
         voc_state_np = obs[ObsNames.VOC_STATE]
         target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]  # T_t+2
 
-        generated_ref = torch.as_tensor(generated_ref_np, dtype=dtype, device=device)
-        target = torch.as_tensor(target_np, dtype=dtype, device=device)
-        voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device)
+        generated_ref = torch.as_tensor(generated_ref_np, dtype=dtype, device=device).unsqueeze(0)
+        target = torch.as_tensor(target_np, dtype=dtype, device=device).unsqueeze(0)
+        voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).unsqueeze(0)
 
     target_spect = np.concatenate(all_target, axis=-1)
     generated_ref_spect = np.concatenate(all_generated_ref, axis=-1)
