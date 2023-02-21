@@ -105,7 +105,8 @@ def visualize_model_approximation(
         voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).unsqueeze(0)
 
         # append prediction via posterior
-        state_posterior = world.obs_encoder(hidden, generated_ref) # s_t+1(posterior)
+        observation = (voc_state, generated_ref)
+        state_posterior = world.obs_encoder(hidden, observation).sample() # s_t+1(posterior)
         _, generated_pred_posterior = world.obs_decoder(hidden, state_posterior) # g_t+1(posterior)
         all_generated_posterior.append(generated_pred_posterior.cpu().numpy())
 
