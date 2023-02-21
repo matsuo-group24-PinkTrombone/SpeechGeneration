@@ -13,16 +13,18 @@ from ..models.abc.world import World
 def make_spectrogram_figure(
     target: np.ndarray,
     generated: np.ndarray,
-    predicted_generated: np.ndarray,
+    generated_prior: np.ndarray,
+    generated_posterior: np.ndarray
 ) -> None:
-    fig, axes = plt.subplots(3, 1)
+    fig, axes = plt.subplots(4, 1)
     fig.tight_layout()
     labels = {"xlabel": "timestamp", "ylabel": "Hz"}
 
     data = {
         "Target": target,
         "Generated": generated,
-        "Predicted Generated": predicted_generated,
+        "Prediction(prior)": generated_prior,
+        "Prediction(posterior)": generated_posterior
     }
     # show target mel spectrogram
     for i, (title, spect) in enumerate(data.items()):
@@ -57,7 +59,8 @@ def visualize_model_approximation(
     """
     all_target = []
     all_generated_ref = []
-    all_generated_pred = []
+    all_generated_prior = []
+    all_generated_posterior=[]
     obs = env.reset()
 
     target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
@@ -68,7 +71,8 @@ def visualize_model_approximation(
     voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).unsqueeze(0)  # v_0
     generated_ref = torch.as_tensor(generated_np, dtype=dtype, device=device).unsqueeze(0)  # g_0
 
-    state = torch.zeros((1, *world.prior.state_shape), dtype=dtype, device=device)  # s_0
+    state_prior = torch.zeros((1, *world.prior.state_shape), dtype=dtype, device=device)  # s_0
+    state_posterior = torch.zeros((1, *world.prior.state_shape), dtype=dtype, device=device)
 
     # init hidden for world model's prediction
     agent.reset()
@@ -78,14 +82,14 @@ def visualize_model_approximation(
     while not done:
         all_target.append(target_np)  # T_t+1
 
-        # append prediction by world model
+        # append prediction via prior
         action = agent.act(
             obs=(voc_state, generated_ref), target=target, probabilistic=False
         )  # a_t
-        hidden = world.transition(hidden, state, action)  # h_t+1
-        state = world.prior(hidden).sample()  # s_t+1
-        _, generated_pred = world.obs_decoder(hidden, state)  # g_t+1(pred)
-        all_generated_pred.append(generated_pred.cpu().numpy())
+        hidden = world.transition(hidden, state_prior, action)  # h_t+1
+        state_prior = world.prior(hidden).sample()  # s_t+1
+        _, generated_prior = world.obs_decoder(hidden, state_prior)  # g_t+1(prior)
+        all_generated_prior.append(generated_prior.cpu().numpy())
 
         # append generated from env
         obs, _, done, _ = env.step(action.squeeze(0).cpu().numpy())  # o_t+1
@@ -100,9 +104,16 @@ def visualize_model_approximation(
         target = torch.as_tensor(target_np, dtype=dtype, device=device).unsqueeze(0)
         voc_state = torch.as_tensor(voc_state_np, dtype=dtype, device=device).unsqueeze(0)
 
+        # append prediction via posterior
+        observation = (voc_state, generated_ref)
+        state_posterior = world.obs_encoder(hidden, observation).sample() # s_t+1(posterior)
+        _, generated_pred_posterior = world.obs_decoder(hidden, state_posterior) # g_t+1(posterior)
+        all_generated_posterior.append(generated_pred_posterior.cpu().numpy())
+
     target_spect = np.concatenate(all_target, axis=-1)
     generated_ref_spect = np.concatenate(all_generated_ref, axis=-1)
-    generated_pred_spect = np.concatenate(all_generated_pred, axis=-1).squeeze(0)
+    generated_prior_spect = np.concatenate(all_generated_prior, axis=-1).squeeze(0)
+    generated_posterior_spect = np.concatenate(all_generated_posterior, axis=-1).squeeze(0)
 
-    fig = make_spectrogram_figure(target_spect, generated_ref_spect, generated_pred_spect)
+    fig = make_spectrogram_figure(target_spect, generated_ref_spect, generated_prior_spect, generated_posterior_spect)
     tensorboard.add_figure(tag, fig, global_step=global_step)
