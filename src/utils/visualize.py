@@ -13,16 +13,18 @@ from ..models.abc.world import World
 def make_spectrogram_figure(
     target: np.ndarray,
     generated: np.ndarray,
-    predicted_generated: np.ndarray,
+    generated_prior: np.ndarray,
+    generated_posterior: np.ndarray
 ) -> None:
-    fig, axes = plt.subplots(3, 1)
+    fig, axes = plt.subplots(4, 1)
     fig.tight_layout()
     labels = {"xlabel": "timestamp", "ylabel": "Hz"}
 
     data = {
         "Target": target,
         "Generated": generated,
-        "Predicted Generated": predicted_generated,
+        "Prediction(prior)": generated_prior,
+        "Prediction(posterior)": generated_posterior
     }
     # show target mel spectrogram
     for i, (title, spect) in enumerate(data.items()):
