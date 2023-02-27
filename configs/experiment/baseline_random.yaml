@@ -12,7 +12,8 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["size small", "dataset random", "interval 100", "buf size 2M", "Collect 8K"]
+tags:
+  ["size small", "dataset random", "interval 100", "buf size 2M", "Collect 8K"]
 task_name: "size small"
 
 replay_buffer:
@@ -27,7 +28,7 @@ model:
     mel_encoder:
       layers: 5
     num_layers: 5
-  obs_decoder: 
+  obs_decoder:
     num_layers: 5
   controller:
     num_layers: 5
