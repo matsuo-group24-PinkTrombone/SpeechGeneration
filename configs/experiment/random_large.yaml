@@ -1,0 +1,48 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /env: make_env.yaml
+  - override /model: linear_stackings.yaml
+  - override /replay_buffer: replay_buffer.yaml
+  - override /trainer: trainer.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags:
+  ["size large", "dataset random", "interval 100", "buf size 2M", "Collect 8K"]
+task_name: "size large"
+
+replay_buffer:
+  buffer_size: 2_000_000
+
+model:
+  agent:
+    action_noise_ratio: 0.8
+  prior:
+    num_layers: 20
+  obs_encoder:
+    mel_encoder:
+      layers: 20
+    num_layers: 20
+  obs_decoder:
+    num_layers: 20
+  controller:
+    num_layers: 20
+  transition:
+    num_layers: 20
+  world_optimizer:
+    lr: 0.001
+  controller_optimizer:
+    lr: 0.001
+  free_nats: 3.0
+  num_collect_experience_steps: 8000
+
+trainer:
+  num_episode: 500
+  batch_size: 64
+  evaluation_interval: 50
+  model_save_interval: 50
