@@ -13,7 +13,14 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 tags:
-  ["action noise 0.1", "size small", "dataset random", "interval 100", "buf size 2M", "Collect 8K"]
+  [
+    "action noise 0.1",
+    "size small",
+    "dataset random",
+    "interval 100",
+    "buf size 2M",
+    "Collect 8K",
+  ]
 task_name: "action noise 0.1 with size small"
 
 replay_buffer:
