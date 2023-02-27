@@ -19,7 +19,7 @@ class ResLayers(nn.Module):
     """Linearの幅と深さを変更できるクラス."""
 
     def __init__(
-        self, input_size: int, hidden_size: int, layers: int, output_size: int, bias: bool = True
+        self, input_size: int, hidden_size: int, res_hidden_size:int, layers: int, output_size: int, bias: bool = True
     ) -> None:
         """
         Args:
@@ -34,7 +34,7 @@ class ResLayers(nn.Module):
 
         self.hidden_layers = nn.Sequential()
 
-        args = (hidden_size, hidden_size, hidden_size, bias)
+        args = (hidden_size, hidden_size, res_hidden_size, bias)
         for _ in range(layers):
             self.hidden_layers.append(ResBlock(*args))
             # self.hidden_layers.append(nn.LayerNorm(hidden_size))
