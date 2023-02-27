@@ -34,7 +34,7 @@ class ResLayers(nn.Module):
 
         self.hidden_layers = nn.Sequential()
 
-        args = (hidden_size, hidden_size, res_hidden_size, bias)
+        args = (hidden_size, res_hidden_size, hidden_size, bias)
         for _ in range(layers):
             self.hidden_layers.append(ResBlock(*args))
             # self.hidden_layers.append(nn.LayerNorm(hidden_size))
