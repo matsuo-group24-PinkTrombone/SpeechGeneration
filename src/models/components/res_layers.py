@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-class ResBlock(nn.Module):
 
-    def __init__(self, input_size: int, hidden_size:int, output_size: int, bias: bool=True):
+class ResBlock(nn.Module):
+    def __init__(self, input_size: int, hidden_size: int, output_size: int, bias: bool = True):
         super().__init__()
         self.fc1 = nn.Linear(input_size, hidden_size, bias)
         self.relu = nn.ReLU()
@@ -15,11 +15,18 @@ class ResBlock(nn.Module):
         hx = fx + x
         return hx
 
+
 class ResLayers(nn.Module):
     """Linearの幅と深さを変更できるクラス."""
 
     def __init__(
-        self, input_size: int, hidden_size: int, res_hidden_size:int, layers: int, output_size: int, bias: bool = True
+        self,
+        input_size: int,
+        hidden_size: int,
+        res_hidden_size: int,
+        layers: int,
+        output_size: int,
+        bias: bool = True,
     ) -> None:
         """
         Args:

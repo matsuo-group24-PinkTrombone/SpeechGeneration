@@ -6,8 +6,8 @@ from torch.distributions import Distribution, Normal
 from ...abc.observation_auto_encoder import ObservationDecoder as AbsObservationDecoder
 from ...abc.observation_auto_encoder import ObservationEncoder as AbsObservationEncoder
 from ..conformer_decoder_fastspeech2 import ConformerDecoder
-from ..res_layers import ResLayers
 from ..posterior_encoder_vits import PosteriorEncoderVITS
+from ..res_layers import ResLayers
 
 
 class ObservationEncoder(AbsObservationEncoder):
