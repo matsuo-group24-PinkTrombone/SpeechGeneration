@@ -14,7 +14,7 @@ def make_spectrogram_figure(
     target: np.ndarray,
     generated: np.ndarray,
     generated_prior: np.ndarray,
-    generated_posterior: np.ndarray
+    generated_posterior: np.ndarray,
 ) -> None:
     fig, axes = plt.subplots(4, 1)
     fig.tight_layout()
@@ -24,7 +24,7 @@ def make_spectrogram_figure(
         "Target": target,
         "Generated": generated,
         "Prediction(prior)": generated_prior,
-        "Prediction(posterior)": generated_posterior
+        "Prediction(posterior)": generated_posterior,
     }
     # show target mel spectrogram
     for i, (title, spect) in enumerate(data.items()):
@@ -60,7 +60,7 @@ def visualize_model_approximation(
     all_target = []
     all_generated_ref = []
     all_generated_prior = []
-    all_generated_posterior=[]
+    all_generated_posterior = []
     obs = env.reset()
 
     target_np = obs[ObsNames.TARGET_SOUND_SPECTROGRAM]
@@ -106,8 +106,10 @@ def visualize_model_approximation(
 
         # append prediction via posterior
         observation = (voc_state, generated_ref)
-        state_posterior = world.obs_encoder(hidden, observation).sample() # s_t+1(posterior)
-        _, generated_pred_posterior = world.obs_decoder(hidden, state_posterior) # g_t+1(posterior)
+        state_posterior = world.obs_encoder(hidden, observation).sample()  # s_t+1(posterior)
+        _, generated_pred_posterior = world.obs_decoder(
+            hidden, state_posterior
+        )  # g_t+1(posterior)
         all_generated_posterior.append(generated_pred_posterior.cpu().numpy())
 
     target_spect = np.concatenate(all_target, axis=-1)
@@ -115,5 +117,7 @@ def visualize_model_approximation(
     generated_prior_spect = np.concatenate(all_generated_prior, axis=-1).squeeze(0)
     generated_posterior_spect = np.concatenate(all_generated_posterior, axis=-1).squeeze(0)
 
-    fig = make_spectrogram_figure(target_spect, generated_ref_spect, generated_prior_spect, generated_posterior_spect)
+    fig = make_spectrogram_figure(
+        target_spect, generated_ref_spect, generated_prior_spect, generated_posterior_spect
+    )
     tensorboard.add_figure(tag, fig, global_step=global_step)
