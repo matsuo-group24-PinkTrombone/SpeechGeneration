@@ -30,11 +30,12 @@ class ResLayers(nn.Module):
     ) -> None:
         """
         Args:
-            input_size (int):
-            hidden_size (int):
-            layers (int):
-            output_size (int):
-            bias (bool):
+            input_size (int): The size of input layers.
+            hidden_size (int): The size of hidden layers.
+            res_hidden_size: The size of hidden layers in ResBlock.
+            layers (int): The number of ResBlocks.
+            output_size (int): The size of output.
+            bias (bool): Whether you need bias or not in ResBlock.
         """
         super().__init__()
         self.input_layer = nn.Linear(input_size, hidden_size, bias=bias)
