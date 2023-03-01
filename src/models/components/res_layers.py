@@ -17,7 +17,7 @@ class ResBlock(nn.Module):
 
 
 class ResLayers(nn.Module):
-    """Linearの幅と深さを変更できるクラス."""
+    """ResBlocksの幅と深さと数を変更できるクラス."""
 
     def __init__(
         self,
